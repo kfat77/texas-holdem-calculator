@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>德州扑克概率计算器 - Texas Hold'em Calculator</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>♠ 德州扑克概率计算器 ♥</h1>
+            <p>输入你的手牌和公共牌，快速计算你能击中的顶级牌型概率</p>
+        </header>
+
+        <!-- 阶段指示器 -->
+        <div class="stage-indicator">
+            <div class="stage-item" id="stage-preflop">Pre-flop 翻牌前</div>
+            <div class="stage-item" id="stage-flop">Flop 翻牌圈</div>
+            <div class="stage-item" id="stage-turn">Turn 转牌圈</div>
+            <div class="stage-item" id="stage-river">River 河牌圈</div>
+        </div>
+
+        <!-- 已选牌展示 -->
+        <div class="section">
+            <h2>🃏 当前选择</h2>
+            <div class="selected-cards-area">
+                <div class="card-group">
+                    <h3>你的手牌 (2张)</h3>
+                    <div class="card-slots" id="hole-slots">
+                        <div class="card-slot" data-index="0" onclick="removeHoleCard(0)"></div>
+                        <div class="card-slot" data-index="1" onclick="removeHoleCard(1)"></div>
+                    </div>
+                </div>
+                <div class="card-group">
+                    <h3>公共牌 (0-5张)</h3>
+                    <div class="card-slots" id="community-slots">
+                        <div class="card-slot" data-index="0" onclick="removeCommunityCard(0)"></div>
+                        <div class="card-slot" data-index="1" onclick="removeCommunityCard(1)"></div>
+                        <div class="card-slot" data-index="2" onclick="removeCommunityCard(2)"></div>
+                        <div class="card-slot" data-index="3" onclick="removeCommunityCard(3)"></div>
+                        <div class="card-slot" data-index="4" onclick="removeCommunityCard(4)"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 牌选择器 -->
+        <div class="section">
+            <h2>🎯 点击选择牌</h2>
+            <p style="color:#aaa;margin-bottom:10px;font-size:0.9em;">先点选手牌（2张），再点选公共牌。点击已选的牌可取消选择。</p>
+            <div class="card-selector" id="card-grid">
+                <!-- 由JS生成 -->
+            </div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="section" style="text-align:center;">
+            <div class="actions">
+                <button class="btn btn-primary" id="calc-btn" onclick="calculate()" disabled>
+                    🚀 计算概率
+                </button>
+                <button class="btn btn-secondary" onclick="clearAll()">
+                    🗑️ 清除全部
+                </button>
+            </div>
+        </div>
+
+        <!-- 进度条 -->
+        <div class="progress-container" id="progress-area">
+            <div class="progress-text" id="progress-text">正在计算...</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+        </div>
+
+        <!-- 结果展示 -->
+        <div class="section result-section" id="result-area">
+            <h2>📊 概率分析结果</h2>
+            <div class="result-info" id="result-info"></div>
+            <div class="probability-list" id="probability-list">
+                <!-- 由JS生成 -->
+            </div>
+        </div>
+
+        <footer>
+            <p>德州扑克概率计算器 | 仅供学习娱乐使用 | 请理性游戏</p>
+        </footer>
+    </div>
+
+    <script src="js/poker-engine.js"></script>
+    <script>
+        // ============ 状态管理 ============
+        let holeCards = [];       // 手牌
+        let communityCards = [];  // 公共牌
+
+        // ============ 初始化 ============
+        function init() {
+            renderCardGrid();
+            updateUI();
+        }
+
+        // ============ 渲染牌网格 ============
+        function renderCardGrid() {
+            const grid = document.getElementById('card-grid');
+            grid.innerHTML = '';
+            
+            for (const suit of SUITS) {
+                const suitClass = (suit === '♥' || suit === '♦') ? 'heart diamond' : 'spade club';
+                for (const rank of RANKS) {
+                    const btn = document.createElement('button');
+                    btn.className = `card-btn ${suitClass}`;
+                    btn.textContent = suit + rank;
+                    btn.dataset.card = suit + rank;
+                    btn.onclick = () => onCardClick(suit, rank);
+                    grid.appendChild(btn);
+                }
+            }
+        }
+
+        // ============ 牌点击处理 ============
+        function onCardClick(suit, rank) {
+            const cardStr = suit + rank;
+            const card = new Card(suit, rank);
+            
+            // 检查是否已选
+            const inHole = holeCards.find(c => c.toString() === cardStr);
+            const inCommunity = communityCards.find(c => c.toString() === cardStr);
+            
+            if (inHole) {
+                holeCards = holeCards.filter(c => c.toString() !== cardStr);
+            } else if (inCommunity) {
+                communityCards = communityCards.filter(c => c.toString() !== cardStr);
+            } else {
+                // 添加到手牌或公共牌
+                if (holeCards.length < 2) {
+                    holeCards.push(card);
+                } else if (communityCards.length < 5) {
+                    communityCards.push(card);
+                }
+            }
+            
+            updateUI();
+        }
+
+        // ============ 移除特定位置的牌 ============
+        function removeHoleCard(index) {
+            if (index < holeCards.length) {
+                holeCards.splice(index, 1);
+                updateUI();
+            }
+        }
+
+        function removeCommunityCard(index) {
+            if (index < communityCards.length) {
+                communityCards.splice(index, 1);
+                updateUI();
+            }
+        }
+
+        // ============ 清除全部 ============
+        function clearAll() {
+            holeCards = [];
+            communityCards = [];
+            document.getElementById('result-area').classList.remove('visible');
+            document.getElementById('progress-area').classList.remove('visible');
+            updateUI();
+        }
+
+        // ============ 更新UI ============
+        function updateUI() {
+            // 更新手牌显示
+            const holeSlots = document.getElementById('hole-slots').children;
+            for (let i = 0; i < 2; i++) {
+                const slot = holeSlots[i];
+                if (i < holeCards.length) {
+                    const card = holeCards[i];
+                    slot.textContent = card.toString();
+                    slot.className = 'card-slot filled ' + ((card.suit === '♥' || card.suit === '♦') ? 'red' : 'black');
+                } else {
+                    slot.textContent = '';
+                    slot.className = 'card-slot';
+                }
+            }
+            
+            // 更新公共牌显示
+            const commSlots = document.getElementById('community-slots').children;
+            for (let i = 0; i < 5; i++) {
+                const slot = commSlots[i];
+                if (i < communityCards.length) {
+                    const card = communityCards[i];
+                    slot.textContent = card.toString();
+                    slot.className = 'card-slot filled ' + ((card.suit === '♥' || card.suit === '♦') ? 'red' : 'black');
+                } else {
+                    slot.textContent = '';
+                    slot.className = 'card-slot';
+                }
+            }
+            
+            // 更新牌网格选中状态
+            const allBtns = document.querySelectorAll('.card-btn');
+            allBtns.forEach(btn => {
+                const cardStr = btn.dataset.card;
+                const inHole = holeCards.find(c => c.toString() === cardStr);
+                const inComm = communityCards.find(c => c.toString() === cardStr);
+                
+                btn.classList.remove('selected', 'disabled');
+                if (inHole || inComm) {
+                    btn.classList.add('selected');
+                }
+                // 如果手牌已满且公共牌已满，未选中的牌禁用
+                if (holeCards.length >= 2 && communityCards.length >= 5 && !inHole && !inComm) {
+                    btn.classList.add('disabled');
+                }
+            });
+            
+            // 更新阶段指示器
+            updateStageIndicator();
+            
+            // 更新计算按钮状态
+            const calcBtn = document.getElementById('calc-btn');
+            calcBtn.disabled = holeCards.length !== 2;
+        }
+
+        function updateStageIndicator() {
+            const stages = ['preflop', 'flop', 'turn', 'river'];
+            const commCount = communityCards.length;
+            let activeStage = 0;
+            if (commCount >= 5) activeStage = 3;
+            else if (commCount >= 4) activeStage = 2;
+            else if (commCount >= 3) activeStage = 1;
+            
+            stages.forEach((s, i) => {
+                const el = document.getElementById('stage-' + s);
+                if (i === activeStage) el.classList.add('active');
+                else el.classList.remove('active');
+            });
+        }
+
+        // ============ 计算概率 ============
+        async function calculate() {
+            if (holeCards.length !== 2) return;
+            
+            const progressArea = document.getElementById('progress-area');
+            const progressFill = document.getElementById('progress-fill');
+            const progressText = document.getElementById('progress-text');
+            const resultArea = document.getElementById('result-area');
+            
+            progressArea.classList.add('visible');
+            resultArea.classList.remove('visible');
+            progressFill.style.width = '0%';
+            
+            // 使用setTimeout让UI先更新
+            await new Promise(r => setTimeout(r, 50));
+            
+            progressText.textContent = '正在枚举所有可能的牌型组合...';
+            progressFill.style.width = '30%';
+            
+            await new Promise(r => setTimeout(r, 50));
+            
+            // 执行计算（可能耗时，用setTimeout避免阻塞UI）
+            setTimeout(() => {
+                const result = calculateProbabilities(holeCards, communityCards);
+                
+                progressFill.style.width = '100%';
+                progressText.textContent = '计算完成！';
+                
+                setTimeout(() => {
+                    progressArea.classList.remove('visible');
+                    showResults(result);
+                }, 300);
+            }, 100);
+        }
+
+        // ============ 展示结果 ============
+        function showResults(result) {
+            const resultArea = document.getElementById('result-area');
+            const resultInfo = document.getElementById('result-info');
+            const probList = document.getElementById('probability-list');
+            
+            // 结果信息
+            const methodText = result.exact ? '精确计算' : '蒙特卡洛模拟';
+            const badgeClass = result.exact ? 'exact-badge' : 'monte-badge';
+            resultInfo.innerHTML = `
+                <div>当前阶段: ${getStageName()}</div>
+                <div>计算方法: <span class="${badgeClass}">${methodText}</span></div>
+                <div style="margin-top:5px;font-size:0.85em;">共评估 ${result.total.toLocaleString()} 种牌型组合</div>
+            `;
+            
+            // 概率条
+            probList.innerHTML = '';
+            const maxProb = result.top7[0].probability;
+            
+            for (let i = 0; i < result.top7.length; i++) {
+                const item = result.top7[i];
+                if (item.probability <= 0) continue;
+                
+                const pct = item.probability.toFixed(2);
+                const widthPct = maxProb > 0 ? (item.probability / maxProb * 100) : 0;
+                
+                let barClass = 'very-low';
+                if (item.probability > 20) barClass = 'high';
+                else if (item.probability > 5) barClass = 'medium';
+                else if (item.probability > 1) barClass = 'low';
+                
+                const div = document.createElement('div');
+                div.className = 'prob-item';
+                div.innerHTML = `
+                    <div class="prob-label">${item.name}</div>
+                    <div class="prob-bar-container">
+                        <div class="prob-bar ${barClass}" style="width: 0%;">
+                            ${pct}%
+                        </div>
+                    </div>
+                `;
+                probList.appendChild(div);
+                
+                // 动画展开
+                setTimeout(() => {
+                    div.querySelector('.prob-bar').style.width = Math.max(widthPct, 8) + '%';
+                }, 100 + i * 100);
+            }
+            
+            resultArea.classList.add('visible');
+        }
+
+        function getStageName() {
+            const c = communityCards.length;
+            if (c === 0) return 'Pre-flop (翻牌前)';
+            if (c === 3) return 'Flop (翻牌圈)';
+            if (c === 4) return 'Turn (转牌圈)';
+            if (c === 5) return 'River (河牌圈)';
+            return '未知阶段';
+        }
+
+        // 启动
+        init();
+    </script>
+</body>
+</html>
