@@ -2,23 +2,33 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>德州扑克概率计算器 - Texas Hold'em Calculator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#1a472a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="扑克计算器">
+    <meta name="description" content="德州扑克概率计算器 - 支持全阶段牌型概率计算，纯前端无需联网">
+    <meta name="format-detection" content="telephone=no">
+    
+    <title>德州扑克概率计算器</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='24' fill='%231a472a'/%3E%3Ctext x='96' y='120' font-size='100' text-anchor='middle' fill='%23ffd700'%3E♠%3C/text%3E%3C/svg%3E">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div class="container">
         <header>
             <h1>♠ 德州扑克概率计算器 ♥</h1>
-            <p>输入你的手牌和公共牌，快速计算你能击中的顶级牌型概率</p>
+            <p>输入你的手牌和公共牌，快速计算顶级牌型概率</p>
         </header>
 
         <!-- 阶段指示器 -->
         <div class="stage-indicator">
-            <div class="stage-item" id="stage-preflop">Pre-flop 翻牌前</div>
-            <div class="stage-item" id="stage-flop">Flop 翻牌圈</div>
-            <div class="stage-item" id="stage-turn">Turn 转牌圈</div>
-            <div class="stage-item" id="stage-river">River 河牌圈</div>
+            <div class="stage-item" id="stage-preflop">Pre-flop</div>
+            <div class="stage-item" id="stage-flop">Flop</div>
+            <div class="stage-item" id="stage-turn">Turn</div>
+            <div class="stage-item" id="stage-river">River</div>
         </div>
 
         <!-- 已选牌展示 -->
@@ -47,64 +57,109 @@
 
         <!-- 牌选择器 -->
         <div class="section">
-            <h2>🎯 点击选择牌</h2>
-            <p style="color:#aaa;margin-bottom:10px;font-size:0.9em;">先点选手牌（2张），再点选公共牌。点击已选的牌可取消选择。</p>
-            <div class="card-selector" id="card-grid">
-                <!-- 由JS生成 -->
-            </div>
+            <h2>🎯 点击选牌</h2>
+            <p style="color:#aaa;margin-bottom:10px;font-size:0.9em;">先选2张手牌，再选公共牌。点击已选的牌可取消。</p>
+            <div class="card-selector" id="card-grid"></div>
         </div>
 
         <!-- 操作按钮 -->
         <div class="section" style="text-align:center;">
             <div class="actions">
-                <button class="btn btn-primary" id="calc-btn" onclick="calculate()" disabled>
-                    🚀 计算概率
-                </button>
-                <button class="btn btn-secondary" onclick="clearAll()">
-                    🗑️ 清除全部
-                </button>
+                <button class="btn btn-primary" id="calc-btn" onclick="calculate()" disabled>🚀 计算概率</button>
+                <button class="btn btn-secondary" onclick="clearAll()">🗑️ 清除</button>
             </div>
         </div>
 
         <!-- 进度条 -->
         <div class="progress-container" id="progress-area">
             <div class="progress-text" id="progress-text">正在计算...</div>
-            <div class="progress-bar">
-                <div class="progress-fill" id="progress-fill"></div>
-            </div>
+            <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
         </div>
 
         <!-- 结果展示 -->
         <div class="section result-section" id="result-area">
-            <h2>📊 概率分析结果</h2>
+            <h2>📊 概率分析</h2>
             <div class="result-info" id="result-info"></div>
-            <div class="probability-list" id="probability-list">
-                <!-- 由JS生成 -->
-            </div>
+            <div class="probability-list" id="probability-list"></div>
         </div>
 
         <footer>
-            <p>德州扑克概率计算器 | 仅供学习娱乐使用 | 请理性游戏</p>
+            <p>德州扑克概率计算器 | 仅供学习娱乐 | 理性游戏</p>
         </footer>
+    </div>
+
+    <!-- PWA 安装提示条 -->
+    <div class="pwa-install-banner" id="pwa-banner">
+        <span>📲 添加到主屏幕，像App一样使用</span>
+        <button class="btn btn-primary" id="pwa-install-btn" onclick="installPWA()">安装</button>
+        <button class="btn btn-secondary" onclick="dismissPWA()" style="padding:8px 14px;font-size:0.85em;">✕</button>
     </div>
 
     <script src="js/poker-engine.js"></script>
     <script>
-        // ============ 状态管理 ============
-        let holeCards = [];       // 手牌
-        let communityCards = [];  // 公共牌
+        // ============ PWA 支持 ============
+        let deferredPrompt = null;
+        
+        // 注册 Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('SW 注册成功'))
+                    .catch(err => console.log('SW 注册失败:', err));
+            });
+        }
+        
+        // 监听 PWA 安装提示
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            // 延迟显示安装提示，不要一打开就弹
+            setTimeout(() => {
+                const banner = document.getElementById('pwa-banner');
+                if (banner && !localStorage.getItem('pwa-dismissed')) {
+                    banner.classList.add('show');
+                }
+            }, 3000);
+        });
+        
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('用户接受了PWA安装');
+                    }
+                    deferredPrompt = null;
+                    document.getElementById('pwa-banner').classList.remove('show');
+                });
+            } else {
+                // iOS Safari 不支持 beforeinstallprompt，显示手动安装提示
+                alert('iOS用户：请点击 Safari 底部分享按钮，然后选择「添加到主屏幕」');
+            }
+        }
+        
+        function dismissPWA() {
+            document.getElementById('pwa-banner').classList.remove('show');
+            localStorage.setItem('pwa-dismissed', 'true');
+        }
+        
+        // 检测 standalone 模式
+        if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true) {
+            document.body.classList.add('standalone');
+        }
 
-        // ============ 初始化 ============
+        // ============ 核心逻辑 ============
+        let holeCards = [];
+        let communityCards = [];
+
         function init() {
             renderCardGrid();
             updateUI();
         }
 
-        // ============ 渲染牌网格 ============
         function renderCardGrid() {
             const grid = document.getElementById('card-grid');
             grid.innerHTML = '';
-            
             for (const suit of SUITS) {
                 const suitClass = (suit === '♥' || suit === '♦') ? 'heart diamond' : 'spade club';
                 for (const rank of RANKS) {
@@ -112,18 +167,16 @@
                     btn.className = `card-btn ${suitClass}`;
                     btn.textContent = suit + rank;
                     btn.dataset.card = suit + rank;
+                    btn.setAttribute('aria-label', suit + rank);
                     btn.onclick = () => onCardClick(suit, rank);
                     grid.appendChild(btn);
                 }
             }
         }
 
-        // ============ 牌点击处理 ============
         function onCardClick(suit, rank) {
             const cardStr = suit + rank;
             const card = new Card(suit, rank);
-            
-            // 检查是否已选
             const inHole = holeCards.find(c => c.toString() === cardStr);
             const inCommunity = communityCards.find(c => c.toString() === cardStr);
             
@@ -131,19 +184,14 @@
                 holeCards = holeCards.filter(c => c.toString() !== cardStr);
             } else if (inCommunity) {
                 communityCards = communityCards.filter(c => c.toString() !== cardStr);
-            } else {
-                // 添加到手牌或公共牌
-                if (holeCards.length < 2) {
-                    holeCards.push(card);
-                } else if (communityCards.length < 5) {
-                    communityCards.push(card);
-                }
+            } else if (holeCards.length < 2) {
+                holeCards.push(card);
+            } else if (communityCards.length < 5) {
+                communityCards.push(card);
             }
-            
             updateUI();
         }
 
-        // ============ 移除特定位置的牌 ============
         function removeHoleCard(index) {
             if (index < holeCards.length) {
                 holeCards.splice(index, 1);
@@ -158,7 +206,6 @@
             }
         }
 
-        // ============ 清除全部 ============
         function clearAll() {
             holeCards = [];
             communityCards = [];
@@ -167,80 +214,57 @@
             updateUI();
         }
 
-        // ============ 更新UI ============
         function updateUI() {
-            // 更新手牌显示
             const holeSlots = document.getElementById('hole-slots').children;
             for (let i = 0; i < 2; i++) {
                 const slot = holeSlots[i];
                 if (i < holeCards.length) {
-                    const card = holeCards[i];
-                    slot.textContent = card.toString();
-                    slot.className = 'card-slot filled ' + ((card.suit === '♥' || card.suit === '♦') ? 'red' : 'black');
+                    const c = holeCards[i];
+                    slot.textContent = c.toString();
+                    slot.className = 'card-slot filled ' + ((c.suit === '♥' || c.suit === '♦') ? 'red' : 'black');
                 } else {
                     slot.textContent = '';
                     slot.className = 'card-slot';
                 }
             }
             
-            // 更新公共牌显示
             const commSlots = document.getElementById('community-slots').children;
             for (let i = 0; i < 5; i++) {
                 const slot = commSlots[i];
                 if (i < communityCards.length) {
-                    const card = communityCards[i];
-                    slot.textContent = card.toString();
-                    slot.className = 'card-slot filled ' + ((card.suit === '♥' || card.suit === '♦') ? 'red' : 'black');
+                    const c = communityCards[i];
+                    slot.textContent = c.toString();
+                    slot.className = 'card-slot filled ' + ((c.suit === '♥' || c.suit === '♦') ? 'red' : 'black');
                 } else {
                     slot.textContent = '';
                     slot.className = 'card-slot';
                 }
             }
             
-            // 更新牌网格选中状态
-            const allBtns = document.querySelectorAll('.card-btn');
-            allBtns.forEach(btn => {
-                const cardStr = btn.dataset.card;
-                const inHole = holeCards.find(c => c.toString() === cardStr);
-                const inComm = communityCards.find(c => c.toString() === cardStr);
-                
+            document.querySelectorAll('.card-btn').forEach(btn => {
+                const cs = btn.dataset.card;
+                const inH = holeCards.find(c => c.toString() === cs);
+                const inC = communityCards.find(c => c.toString() === cs);
                 btn.classList.remove('selected', 'disabled');
-                if (inHole || inComm) {
-                    btn.classList.add('selected');
-                }
-                // 如果手牌已满且公共牌已满，未选中的牌禁用
-                if (holeCards.length >= 2 && communityCards.length >= 5 && !inHole && !inComm) {
+                if (inH || inC) btn.classList.add('selected');
+                if (holeCards.length >= 2 && communityCards.length >= 5 && !inH && !inC) {
                     btn.classList.add('disabled');
                 }
             });
             
-            // 更新阶段指示器
-            updateStageIndicator();
-            
-            // 更新计算按钮状态
-            const calcBtn = document.getElementById('calc-btn');
-            calcBtn.disabled = holeCards.length !== 2;
-        }
-
-        function updateStageIndicator() {
             const stages = ['preflop', 'flop', 'turn', 'river'];
-            const commCount = communityCards.length;
-            let activeStage = 0;
-            if (commCount >= 5) activeStage = 3;
-            else if (commCount >= 4) activeStage = 2;
-            else if (commCount >= 3) activeStage = 1;
-            
+            const cc = communityCards.length;
+            let active = cc >= 5 ? 3 : cc >= 4 ? 2 : cc >= 3 ? 1 : 0;
             stages.forEach((s, i) => {
                 const el = document.getElementById('stage-' + s);
-                if (i === activeStage) el.classList.add('active');
-                else el.classList.remove('active');
+                el.classList.toggle('active', i === active);
             });
+            
+            document.getElementById('calc-btn').disabled = holeCards.length !== 2;
         }
 
-        // ============ 计算概率 ============
         async function calculate() {
             if (holeCards.length !== 2) return;
-            
             const progressArea = document.getElementById('progress-area');
             const progressFill = document.getElementById('progress-fill');
             const progressText = document.getElementById('progress-text');
@@ -250,21 +274,15 @@
             resultArea.classList.remove('visible');
             progressFill.style.width = '0%';
             
-            // 使用setTimeout让UI先更新
             await new Promise(r => setTimeout(r, 50));
-            
-            progressText.textContent = '正在枚举所有可能的牌型组合...';
+            progressText.textContent = '正在计算中...';
             progressFill.style.width = '30%';
-            
             await new Promise(r => setTimeout(r, 50));
             
-            // 执行计算（可能耗时，用setTimeout避免阻塞UI）
             setTimeout(() => {
                 const result = calculateProbabilities(holeCards, communityCards);
-                
                 progressFill.style.width = '100%';
                 progressText.textContent = '计算完成！';
-                
                 setTimeout(() => {
                     progressArea.classList.remove('visible');
                     showResults(result);
@@ -272,68 +290,59 @@
             }, 100);
         }
 
-        // ============ 展示结果 ============
         function showResults(result) {
             const resultArea = document.getElementById('result-area');
             const resultInfo = document.getElementById('result-info');
             const probList = document.getElementById('probability-list');
             
-            // 结果信息
             const methodText = result.exact ? '精确计算' : '蒙特卡洛模拟';
             const badgeClass = result.exact ? 'exact-badge' : 'monte-badge';
             resultInfo.innerHTML = `
-                <div>当前阶段: ${getStageName()}</div>
-                <div>计算方法: <span class="${badgeClass}">${methodText}</span></div>
-                <div style="margin-top:5px;font-size:0.85em;">共评估 ${result.total.toLocaleString()} 种牌型组合</div>
+                <div>${getStageName()}</div>
+                <div><span class="${badgeClass}">${methodText}</span></div>
+                <div style="margin-top:4px;font-size:0.8em;color:#888;">评估 ${result.total.toLocaleString()} 种组合</div>
             `;
             
-            // 概率条
             probList.innerHTML = '';
             const maxProb = result.top7[0].probability;
             
             for (let i = 0; i < result.top7.length; i++) {
                 const item = result.top7[i];
                 if (item.probability <= 0) continue;
-                
                 const pct = item.probability.toFixed(2);
-                const widthPct = maxProb > 0 ? (item.probability / maxProb * 100) : 0;
-                
-                let barClass = 'very-low';
-                if (item.probability > 20) barClass = 'high';
-                else if (item.probability > 5) barClass = 'medium';
-                else if (item.probability > 1) barClass = 'low';
+                const wp = maxProb > 0 ? (item.probability / maxProb * 100) : 0;
+                let bc = 'very-low';
+                if (item.probability > 20) bc = 'high';
+                else if (item.probability > 5) bc = 'medium';
+                else if (item.probability > 1) bc = 'low';
                 
                 const div = document.createElement('div');
                 div.className = 'prob-item';
                 div.innerHTML = `
                     <div class="prob-label">${item.name}</div>
                     <div class="prob-bar-container">
-                        <div class="prob-bar ${barClass}" style="width: 0%;">
-                            ${pct}%
-                        </div>
+                        <div class="prob-bar ${bc}" style="width:0%">${pct}%</div>
                     </div>
                 `;
                 probList.appendChild(div);
-                
-                // 动画展开
                 setTimeout(() => {
-                    div.querySelector('.prob-bar').style.width = Math.max(widthPct, 8) + '%';
+                    div.querySelector('.prob-bar').style.width = Math.max(wp, 8) + '%';
                 }, 100 + i * 100);
             }
             
             resultArea.classList.add('visible');
+            resultArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
 
         function getStageName() {
             const c = communityCards.length;
-            if (c === 0) return 'Pre-flop (翻牌前)';
-            if (c === 3) return 'Flop (翻牌圈)';
-            if (c === 4) return 'Turn (转牌圈)';
-            if (c === 5) return 'River (河牌圈)';
+            if (c === 0) return 'Pre-flop（翻牌前）';
+            if (c === 3) return 'Flop（翻牌圈）';
+            if (c === 4) return 'Turn（转牌圈）';
+            if (c === 5) return 'River（河牌圈）';
             return '未知阶段';
         }
 
-        // 启动
         init();
     </script>
 </body>
