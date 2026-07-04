@@ -65,7 +65,47 @@ header p {
     font-weight: 400;
 }
 
-/* ========== 阶段指示器 ========== */
+/* ========== 阶段指示器（轻量文字样式） ========== */
+.stage-indicator {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin: 0 0 28px;
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
+    max-width: none;
+}
+
+.stage-item {
+    text-align: center;
+    padding: 4px 0;
+    border-radius: 0;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    cursor: default;
+    position: relative;
+    letter-spacing: 0.02em;
+}
+
+.stage-item.active {
+    background: transparent;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.stage-item.active::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--text-primary);
+    border-radius: 1px;
+}
 .stage-indicator {
     display: flex;
     justify-content: center;
@@ -272,6 +312,18 @@ header p {
 }
 
 /* ========== 数字选择器 ========== */
+.rank-picker {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+}
+
+@media (min-width: 600px) {
+    .rank-picker {
+        grid-template-columns: repeat(13, 1fr);
+        gap: 4px;
+    }
+}
 .rank-picker {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
