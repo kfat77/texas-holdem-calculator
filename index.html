@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#000000">
+    <meta name="theme-color" content="#0d3320">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="扑克计算器">
@@ -13,7 +13,7 @@
     <title>德州扑克概率计算器</title>
     
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='24' fill='%23000'/%3E%3Ctext x='96' y='120' font-size='100' text-anchor='middle' fill='%23fff'%3E♠%3C/text%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='24' fill='%230d3320'/%3E%3Ctext x='96' y='120' font-size='100' text-anchor='middle' fill='%23ffd700'%3E♠%3C/text%3E%3C/svg%3E">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -24,11 +24,11 @@
         </header>
 
         <!-- 阶段指示器 -->
-        <div class="stage-indicator">
-            <div class="stage-item" id="stage-preflop">Pre-flop</div>
-            <div class="stage-item" id="stage-flop">Flop</div>
-            <div class="stage-item" id="stage-turn">Turn</div>
-            <div class="stage-item" id="stage-river">River</div>
+        <div class="stage-indicator" id="stage-indicator">
+            <div class="stage-item active" id="stage-preflop" data-stage="0">Pre-flop</div>
+            <div class="stage-item" id="stage-flop" data-stage="3">Flop</div>
+            <div class="stage-item" id="stage-turn" data-stage="4">Turn</div>
+            <div class="stage-item" id="stage-river" data-stage="5">River</div>
         </div>
 
         <!-- 已选牌展示 -->
@@ -91,6 +91,7 @@
         <div class="section" style="text-align:center;">
             <div class="actions">
                 <button class="btn btn-primary" id="calc-btn" onclick="calculate()" disabled>计算概率</button>
+                <button class="btn btn-secondary" id="undo-btn" onclick="undoLastCard()" disabled>↩️ 撤销</button>
                 <button class="btn btn-secondary" onclick="clearAll()">清除全部</button>
             </div>
         </div>
@@ -172,6 +173,7 @@
         let holeCards = [];
         let communityCards = [];
         let selectedSuit = '♠';
+        let cardHistory = []; // 记录添加顺序，用于撤销
         const RANKS_ORDER = ['A', 'K', 'Q', 'J', '10', '9', '8', '7', '6', '5', '4', '3', '2'];
 
         function init() {
@@ -208,30 +210,61 @@
             const inCommunity = communityCards.find(c => c.toString() === cardStr);
             
             if (inHole) {
+                // 取消选择（从手牌中移除）
                 holeCards = holeCards.filter(c => c.toString() !== cardStr);
+                cardHistory = cardHistory.filter(h => h !== cardStr);
             } else if (inCommunity) {
+                // 取消选择（从公共牌中移除）
                 communityCards = communityCards.filter(c => c.toString() !== cardStr);
+                cardHistory = cardHistory.filter(h => h !== cardStr);
             } else {
+                // 添加新牌
                 if (holeCards.length < 2) {
                     holeCards.push(card);
+                    cardHistory.push(cardStr);
                 } else if (communityCards.length < 5) {
                     communityCards.push(card);
+                    cardHistory.push(cardStr);
                 }
             }
             
             updateUI();
         }
 
+        // 撤销上一张
+        function undoLastCard() {
+            if (cardHistory.length === 0) return;
+            
+            const lastCardStr = cardHistory[cardHistory.length - 1];
+            
+            // 从手牌或公共牌中移除
+            const inHole = holeCards.find(c => c.toString() === lastCardStr);
+            if (inHole) {
+                holeCards = holeCards.filter(c => c.toString() !== lastCardStr);
+            } else {
+                communityCards = communityCards.filter(c => c.toString() !== lastCardStr);
+            }
+            
+            // 从历史记录中移除
+            cardHistory.pop();
+            
+            updateUI();
+        }
+
         function removeHoleCard(index) {
             if (index < holeCards.length) {
+                const removed = holeCards[index].toString();
                 holeCards.splice(index, 1);
+                cardHistory = cardHistory.filter(h => h !== removed);
                 updateUI();
             }
         }
 
         function removeCommunityCard(index) {
             if (index < communityCards.length) {
+                const removed = communityCards[index].toString();
                 communityCards.splice(index, 1);
+                cardHistory = cardHistory.filter(h => h !== removed);
                 updateUI();
             }
         }
@@ -239,6 +272,7 @@
         function clearAll() {
             holeCards = [];
             communityCards = [];
+            cardHistory = [];
             document.getElementById('result-area').classList.remove('visible');
             document.getElementById('progress-area').classList.remove('visible');
             updateUI();
@@ -283,6 +317,56 @@
             });
         }
 
+        // 更新阶段指示器 - 动态显示当前状态
+        function updateStageIndicator() {
+            const stages = ['preflop', 'flop', 'turn', 'river'];
+            const cc = communityCards.length;
+            const hc = holeCards.length;
+            
+            // 清除所有active
+            stages.forEach(s => {
+                document.getElementById('stage-' + s).classList.remove('active');
+            });
+            
+            let activeStage = 'preflop';
+            let stageText = 'Pre-flop';
+            
+            if (cc === 0) {
+                // 翻牌前阶段
+                activeStage = 'preflop';
+                if (hc < 2) {
+                    stageText = `Pre-flop · 还需${2 - hc}张手牌`;
+                } else {
+                    stageText = 'Pre-flop · 翻牌前';
+                }
+            } else if (cc < 3) {
+                // 还在翻牌前阶段，等待翻牌（3张公共牌）
+                activeStage = 'preflop';
+                stageText = `Pre-flop · 还需${3 - cc}张翻牌`;
+            } else if (cc === 3) {
+                activeStage = 'flop';
+                stageText = 'Flop · 翻牌圈';
+            } else if (cc === 4) {
+                activeStage = 'turn';
+                stageText = 'Turn · 转牌圈';
+            } else if (cc === 5) {
+                activeStage = 'river';
+                stageText = 'River · 河牌圈';
+            }
+            
+            const activeEl = document.getElementById('stage-' + activeStage);
+            activeEl.classList.add('active');
+            activeEl.textContent = stageText;
+            
+            // 恢复其他阶段的原始文本
+            const originalTexts = { 'preflop': 'Pre-flop', 'flop': 'Flop', 'turn': 'Turn', 'river': 'River' };
+            stages.forEach(s => {
+                if (s !== activeStage) {
+                    document.getElementById('stage-' + s).textContent = originalTexts[s];
+                }
+            });
+        }
+
         function updateUI() {
             const holeSlots = document.getElementById('hole-slots').children;
             for (let i = 0; i < 2; i++) {
@@ -313,28 +397,27 @@
             updateHint();
             updateSuitButtons();
             updateRankButtons();
+            updateStageIndicator();
             
-            const stages = ['preflop', 'flop', 'turn', 'river'];
-            const cc = communityCards.length;
-            let active = cc >= 5 ? 3 : cc >= 4 ? 2 : cc >= 3 ? 1 : 0;
-            stages.forEach((s, i) => {
-                const el = document.getElementById('stage-' + s);
-                el.classList.toggle('active', i === active);
-            });
-            
+            // 更新按钮状态
             document.getElementById('calc-btn').disabled = holeCards.length !== 2;
+            document.getElementById('undo-btn').disabled = cardHistory.length === 0;
         }
 
         function updateHint() {
             const hint = document.getElementById('picker-hint');
+            const hc = holeCards.length;
+            const cc = communityCards.length;
             
             let hintHTML = '';
-            if (holeCards.length < 2) {
-                hintHTML = `<strong>① 选花色 → ② 选数字</strong> <span style="color:var(--text-secondary);margin-left:8px;">还需 ${2 - holeCards.length} 张手牌</span>`;
-            } else if (communityCards.length < 5) {
-                hintHTML = `<strong>① 选花色 → ② 选数字</strong> <span style="color:var(--text-secondary);margin-left:8px;">还需 ${5 - communityCards.length} 张公共牌</span>`;
+            if (hc < 2) {
+                hintHTML = `<strong>① 选花色 → ② 选数字</strong> <span style="color:var(--text-secondary);margin-left:8px;">还需 ${2 - hc} 张手牌</span>`;
+            } else if (cc < 3) {
+                hintHTML = `<strong>① 选花色 → ② 选数字</strong> <span style="color:var(--text-secondary);margin-left:8px;">还需 ${3 - cc} 张翻牌</span>`;
+            } else if (cc < 5) {
+                hintHTML = `<strong>① 选花色 → ② 选数字</strong> <span style="color:var(--text-secondary);margin-left:8px;">还需 ${5 - cc} 张公共牌</span>`;
             } else {
-                hintHTML = `<span style="color:var(--success);">✓ 已选满 ${holeCards.length + communityCards.length} 张牌，可以计算了</span>`;
+                hintHTML = `<span style="color:var(--success);">✓ 已选满 ${hc + cc} 张牌，可以计算了</span>`;
             }
             hint.innerHTML = hintHTML;
         }
