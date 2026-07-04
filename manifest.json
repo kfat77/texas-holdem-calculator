@@ -2,12 +2,12 @@
   "name": "德州扑克概率计算器",
   "short_name": "扑克计算器",
   "description": "德州扑克手牌概率计算工具 - 支持Pre-flop到River全阶段",
-  "start_url": "/",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0d3320",
   "theme_color": "#1a472a",
   "orientation": "portrait-primary",
-  "scope": "/",
+  "scope": ".",
   "lang": "zh-CN",
   "icons": [
     {
