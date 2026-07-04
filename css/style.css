@@ -1,5 +1,5 @@
-/* 德州扑克概率计算器 - 样式表 v2.0 */
-/* 全面适配手机、平板、电脑 */
+/* 德州扑克概率计算器 - 样式表 v3.0 */
+/* 两步选牌：花色 + 数字 */
 
 * {
     margin: 0;
@@ -155,50 +155,148 @@ header p {
     color: #212121;
 }
 
-/* ========== 牌选择器 ========== */
-.card-selector {
-    display: grid;
-    grid-template-columns: repeat(13, 1fr);
-    gap: 5px;
-    margin-top: 12px;
+/* ========== 两步选牌提示 ========== */
+.picker-hint {
+    text-align: center;
+    margin-bottom: 16px;
+    font-size: clamp(0.9em, 2.5vw, 1.05em);
+    color: #aaa;
 }
 
-.card-btn {
-    aspect-ratio: 3/4;
-    border-radius: 8px;
-    border: 1.5px solid rgba(255,255,255,0.2);
+.picker-hint .hint-step {
+    transition: color 0.3s;
+}
+
+.picker-hint .hint-step.active {
+    color: #ffd700;
+    font-weight: bold;
+}
+
+.picker-hint .hint-arrow {
+    color: #666;
+    margin: 0 6px;
+}
+
+/* ========== 花色选择器 ========== */
+.suit-picker {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.suit-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 8px;
+    border-radius: 14px;
+    border: 2px solid rgba(255,255,255,0.15);
     background: rgba(255,255,255,0.06);
     color: #fff;
-    font-size: clamp(0.85em, 2.2vw, 1.15em);
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    gap: 4px;
+}
+
+.suit-btn:active {
+    transform: scale(0.96);
+}
+
+.suit-btn .suit-icon {
+    font-size: clamp(1.8em, 5vw, 2.5em);
+    line-height: 1;
+}
+
+.suit-btn .suit-name {
+    font-size: clamp(0.7em, 2vw, 0.85em);
+    opacity: 0.8;
+}
+
+/* 黑桃和梅花 */
+.suit-btn[data-suit="♠"] .suit-icon,
+.suit-btn[data-suit="♣"] .suit-icon {
+    color: #fff;
+}
+
+/* 红桃和方块 */
+.suit-btn[data-suit="♥"] .suit-icon,
+.suit-btn[data-suit="♦"] .suit-icon {
+    color: #ff6b6b;
+}
+
+/* 选中状态 */
+.suit-btn.active {
+    background: rgba(255,215,0,0.15);
+    border-color: #ffd700;
+    box-shadow: 0 0 20px rgba(255,215,0,0.2);
+}
+
+.suit-btn.active .suit-icon {
+    transform: scale(1.1);
+}
+
+/* ========== 数字选择器 ========== */
+.rank-picker {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+}
+
+@media (min-width: 600px) {
+    .rank-picker {
+        grid-template-columns: repeat(13, 1fr);
+    }
+}
+
+.rank-btn {
+    aspect-ratio: 1 / 1.1;
+    border-radius: 12px;
+    border: 2px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.06);
+    color: #fff;
+    font-size: clamp(1em, 3vw, 1.3em);
+    font-weight: bold;
     cursor: pointer;
     transition: all 0.15s;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0;
-    min-height: 36px;
     user-select: none;
     -webkit-user-select: none;
     touch-action: manipulation;
     font-family: inherit;
-    font-weight: 500;
+    padding: 0;
 }
 
-.card-btn:active {
+.rank-btn:active {
     transform: scale(0.92);
 }
 
-.card-btn.selected {
-    background: #ffd700 !important;
-    color: #1a472a !important;
-    border-color: #ffd700 !important;
+/* 已选中（当前花色） */
+.rank-btn.selected {
+    background: #ffd700;
+    color: #1a472a;
+    border-color: #ffd700;
+    box-shadow: 0 0 15px rgba(255,215,0,0.4);
     font-weight: bold;
-    box-shadow: 0 0 15px rgba(255,215,0,0.5);
-    transform: scale(1.05);
 }
 
-.card-btn.disabled {
-    opacity: 0.15;
+/* 其他花色已选中（灰色提示） */
+.rank-btn.other-suit {
+    background: rgba(100,100,100,0.2);
+    border-color: rgba(255,255,255,0.1);
+    color: #666;
+    opacity: 0.6;
+}
+
+/* 禁用 */
+.rank-btn.disabled {
+    opacity: 0.2;
     cursor: not-allowed;
     pointer-events: none;
 }
@@ -419,34 +517,6 @@ footer {
     min-height: 40px;
 }
 
-/* ========== 横屏提示 ========== */
-.landscape-hint {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.9);
-    z-index: 2000;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    text-align: center;
-    padding: 20px;
-}
-
-.landscape-hint .rotate-icon {
-    font-size: 4em;
-    margin-bottom: 16px;
-    animation: rotatePhone 2s ease-in-out infinite;
-}
-
-@keyframes rotatePhone {
-    0%, 100% { transform: rotate(0deg); }
-    50% { transform: rotate(90deg); }
-}
-
 /* ========== 响应式断点 ========== */
 
 /* 平板 */
@@ -455,6 +525,23 @@ footer {
     .section { padding: 16px; }
     .selected-cards-area { gap: 12px; }
     .card-group { min-width: 120px; }
+    
+    .suit-picker {
+        gap: 8px;
+    }
+    
+    .suit-btn {
+        padding: 10px 6px;
+        border-radius: 12px;
+    }
+    
+    .rank-picker {
+        gap: 6px;
+    }
+    
+    .rank-btn {
+        border-radius: 10px;
+    }
 }
 
 /* 手机竖屏 */
@@ -462,24 +549,26 @@ footer {
     body { padding: 10px; }
     .section { padding: 14px; border-radius: 12px; }
     
-    .card-selector {
-        gap: 3px;
-    }
-    
-    .card-btn {
-        border-radius: 6px;
-        font-size: 0.8em;
-        min-height: 32px;
-    }
-    
-    .card-slots {
+    .suit-picker {
         gap: 6px;
-        min-height: 60px;
-        padding: 8px;
     }
     
-    .card-slot {
-        border-radius: 6px;
+    .suit-btn {
+        padding: 8px 4px;
+        border-radius: 10px;
+    }
+    
+    .suit-btn .suit-name {
+        font-size: 0.65em;
+    }
+    
+    .rank-picker {
+        gap: 5px;
+    }
+    
+    .rank-btn {
+        border-radius: 8px;
+        font-size: 0.9em;
     }
     
     .actions {
@@ -504,14 +593,21 @@ footer {
 
 /* 超小屏 */
 @media (max-width: 360px) {
-    .card-selector {
-        gap: 2px;
+    .suit-picker {
+        gap: 4px;
     }
     
-    .card-btn {
-        font-size: 0.7em;
-        min-height: 28px;
-        border-radius: 4px;
+    .suit-btn {
+        padding: 6px 2px;
+    }
+    
+    .rank-picker {
+        gap: 3px;
+    }
+    
+    .rank-btn {
+        font-size: 0.8em;
+        border-radius: 6px;
     }
     
     .stage-item {

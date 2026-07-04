@@ -20,7 +20,7 @@
     <div class="container">
         <header>
             <h1>♠ 德州扑克概率计算器 ♥</h1>
-            <p>输入你的手牌和公共牌，快速计算顶级牌型概率</p>
+            <p>选花色 → 选数字，组合成牌计算概率</p>
         </header>
 
         <!-- 阶段指示器 -->
@@ -55,18 +55,48 @@
             </div>
         </div>
 
-        <!-- 牌选择器 -->
+        <!-- 两步选牌区域 -->
         <div class="section">
-            <h2>🎯 点击选牌</h2>
-            <p style="color:#aaa;margin-bottom:10px;font-size:0.9em;">先选2张手牌，再选公共牌。点击已选的牌可取消。</p>
-            <div class="card-selector" id="card-grid"></div>
+            <h2>🎯 选择手牌</h2>
+            
+            <!-- 提示语 -->
+            <div class="picker-hint" id="picker-hint">
+                <span class="hint-step active">① 选一个花色</span>
+                <span class="hint-arrow">→</span>
+                <span class="hint-step">② 选一个数字</span>
+            </div>
+            
+            <!-- 花色选择 -->
+            <div class="suit-picker" id="suit-picker">
+                <button class="suit-btn" data-suit="♠" onclick="selectSuit('♠')">
+                    <span class="suit-icon">♠</span>
+                    <span class="suit-name">黑桃</span>
+                </button>
+                <button class="suit-btn" data-suit="♥" onclick="selectSuit('♥')">
+                    <span class="suit-icon">♥</span>
+                    <span class="suit-name">红桃</span>
+                </button>
+                <button class="suit-btn" data-suit="♣" onclick="selectSuit('♣')">
+                    <span class="suit-icon">♣</span>
+                    <span class="suit-name">梅花</span>
+                </button>
+                <button class="suit-btn" data-suit="♦" onclick="selectSuit('♦')">
+                    <span class="suit-icon">♦</span>
+                    <span class="suit-name">方块</span>
+                </button>
+            </div>
+            
+            <!-- 数字选择 -->
+            <div class="rank-picker" id="rank-picker">
+                <!-- 由JS生成 -->
+            </div>
         </div>
 
         <!-- 操作按钮 -->
         <div class="section" style="text-align:center;">
             <div class="actions">
                 <button class="btn btn-primary" id="calc-btn" onclick="calculate()" disabled>🚀 计算概率</button>
-                <button class="btn btn-secondary" onclick="clearAll()">🗑️ 清除</button>
+                <button class="btn btn-secondary" onclick="clearAll()">🗑️ 清除全部</button>
             </div>
         </div>
 
@@ -100,7 +130,6 @@
         // ============ PWA 支持 ============
         let deferredPrompt = null;
         
-        // 注册 Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js')
@@ -109,11 +138,9 @@
             });
         }
         
-        // 监听 PWA 安装提示
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            // 延迟显示安装提示，不要一打开就弹
             setTimeout(() => {
                 const banner = document.getElementById('pwa-banner');
                 if (banner && !localStorage.getItem('pwa-dismissed')) {
@@ -133,7 +160,6 @@
                     document.getElementById('pwa-banner').classList.remove('show');
                 });
             } else {
-                // iOS Safari 不支持 beforeinstallprompt，显示手动安装提示
                 alert('iOS用户：请点击 Safari 底部分享按钮，然后选择「添加到主屏幕」');
             }
         }
@@ -143,7 +169,6 @@
             localStorage.setItem('pwa-dismissed', 'true');
         }
         
-        // 检测 standalone 模式
         if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true) {
             document.body.classList.add('standalone');
         }
@@ -151,44 +176,61 @@
         // ============ 核心逻辑 ============
         let holeCards = [];
         let communityCards = [];
+        let selectedSuit = '♠'; // 默认选中黑桃
+        const RANKS_ORDER = ['A', 'K', 'Q', 'J', '10', '9', '8', '7', '6', '5', '4', '3', '2'];
 
         function init() {
-            renderCardGrid();
+            renderRankPicker();
             updateUI();
         }
 
-        function renderCardGrid() {
-            const grid = document.getElementById('card-grid');
-            grid.innerHTML = '';
-            for (const suit of SUITS) {
-                const suitClass = (suit === '♥' || suit === '♦') ? 'heart diamond' : 'spade club';
-                for (const rank of RANKS) {
-                    const btn = document.createElement('button');
-                    btn.className = `card-btn ${suitClass}`;
-                    btn.textContent = suit + rank;
-                    btn.dataset.card = suit + rank;
-                    btn.setAttribute('aria-label', suit + rank);
-                    btn.onclick = () => onCardClick(suit, rank);
-                    grid.appendChild(btn);
-                }
+        // 渲染数字选择器
+        function renderRankPicker() {
+            const container = document.getElementById('rank-picker');
+            container.innerHTML = '';
+            
+            for (const rank of RANKS_ORDER) {
+                const btn = document.createElement('button');
+                btn.className = 'rank-btn';
+                btn.textContent = rank;
+                btn.dataset.rank = rank;
+                btn.setAttribute('aria-label', '数字' + rank);
+                btn.onclick = () => onRankClick(rank);
+                container.appendChild(btn);
             }
         }
 
-        function onCardClick(suit, rank) {
-            const cardStr = suit + rank;
-            const card = new Card(suit, rank);
+        // 选择花色
+        function selectSuit(suit) {
+            selectedSuit = suit;
+            updateSuitButtons();
+            updateRankButtons();
+        }
+
+        // 点击数字按钮
+        function onRankClick(rank) {
+            const cardStr = selectedSuit + rank;
+            const card = new Card(selectedSuit, rank);
+            
+            // 检查这张牌是否已选
             const inHole = holeCards.find(c => c.toString() === cardStr);
             const inCommunity = communityCards.find(c => c.toString() === cardStr);
             
             if (inHole) {
+                // 取消手牌中的这张
                 holeCards = holeCards.filter(c => c.toString() !== cardStr);
             } else if (inCommunity) {
+                // 取消公共牌中的这张
                 communityCards = communityCards.filter(c => c.toString() !== cardStr);
-            } else if (holeCards.length < 2) {
-                holeCards.push(card);
-            } else if (communityCards.length < 5) {
-                communityCards.push(card);
+            } else {
+                // 添加新牌
+                if (holeCards.length < 2) {
+                    holeCards.push(card);
+                } else if (communityCards.length < 5) {
+                    communityCards.push(card);
+                }
             }
+            
             updateUI();
         }
 
@@ -214,7 +256,53 @@
             updateUI();
         }
 
+        // 更新花色按钮状态
+        function updateSuitButtons() {
+            document.querySelectorAll('.suit-btn').forEach(btn => {
+                const suit = btn.dataset.suit;
+                btn.classList.toggle('active', suit === selectedSuit);
+            });
+        }
+
+        // 更新数字按钮状态
+        function updateRankButtons() {
+            document.querySelectorAll('.rank-btn').forEach(btn => {
+                const rank = btn.dataset.rank;
+                const cardStr = selectedSuit + rank;
+                
+                // 检查这个rank的任何花色是否已被选
+                let isSelected = false;
+                for (const s of SUITS) {
+                    const cs = s + rank;
+                    if (holeCards.find(c => c.toString() === cs) || 
+                        communityCards.find(c => c.toString() === cs)) {
+                        isSelected = true;
+                        break;
+                    }
+                }
+                
+                // 检查当前花色+该rank是否被选中
+                const isCurrentSelected = holeCards.find(c => c.toString() === cardStr) || 
+                                          communityCards.find(c => c.toString() === cardStr);
+                
+                btn.classList.remove('selected', 'disabled', 'other-suit');
+                
+                if (isCurrentSelected) {
+                    btn.classList.add('selected');
+                } else if (isSelected) {
+                    // 其他花色已选了这个数字，但当前花色没选
+                    btn.classList.add('other-suit');
+                }
+                
+                // 如果牌已经满了（2手牌+5公共牌），禁用
+                if (holeCards.length >= 2 && communityCards.length >= 5 && !isSelected) {
+                    btn.classList.add('disabled');
+                }
+            });
+        }
+
         function updateUI() {
+            // 更新手牌显示
             const holeSlots = document.getElementById('hole-slots').children;
             for (let i = 0; i < 2; i++) {
                 const slot = holeSlots[i];
@@ -228,6 +316,7 @@
                 }
             }
             
+            // 更新公共牌显示
             const commSlots = document.getElementById('community-slots').children;
             for (let i = 0; i < 5; i++) {
                 const slot = commSlots[i];
@@ -241,17 +330,16 @@
                 }
             }
             
-            document.querySelectorAll('.card-btn').forEach(btn => {
-                const cs = btn.dataset.card;
-                const inH = holeCards.find(c => c.toString() === cs);
-                const inC = communityCards.find(c => c.toString() === cs);
-                btn.classList.remove('selected', 'disabled');
-                if (inH || inC) btn.classList.add('selected');
-                if (holeCards.length >= 2 && communityCards.length >= 5 && !inH && !inC) {
-                    btn.classList.add('disabled');
-                }
-            });
+            // 更新提示语
+            updateHint();
             
+            // 更新花色按钮
+            updateSuitButtons();
+            
+            // 更新数字按钮
+            updateRankButtons();
+            
+            // 更新阶段指示器
             const stages = ['preflop', 'flop', 'turn', 'river'];
             const cc = communityCards.length;
             let active = cc >= 5 ? 3 : cc >= 4 ? 2 : cc >= 3 ? 1 : 0;
@@ -260,7 +348,32 @@
                 el.classList.toggle('active', i === active);
             });
             
+            // 更新计算按钮
             document.getElementById('calc-btn').disabled = holeCards.length !== 2;
+        }
+
+        function updateHint() {
+            const hint = document.getElementById('picker-hint');
+            const total = holeCards.length + communityCards.length;
+            const maxCards = 7;
+            
+            let hintHTML = '';
+            if (holeCards.length < 2) {
+                hintHTML = `
+                    <span class="hint-step active">① 选花色 → ② 选数字</span>
+                    <span style="color:#ffd700;margin-left:8px;">(${2 - holeCards.length}张手牌)</span>
+                `;
+            } else if (communityCards.length < 5) {
+                hintHTML = `
+                    <span class="hint-step active">① 选花色 → ② 选数字</span>
+                    <span style="color:#ffd700;margin-left:8px;">(${5 - communityCards.length}张公共牌)</span>
+                `;
+            } else {
+                hintHTML = `
+                    <span class="hint-step active" style="color:#4caf50;">✓ 已选满 ${total} 张牌，可以计算了！</span>
+                `;
+            }
+            hint.innerHTML = hintHTML;
         }
 
         async function calculate() {
