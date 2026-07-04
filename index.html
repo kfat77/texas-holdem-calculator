@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#1a472a">
+    <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="扑克计算器">
@@ -13,13 +13,13 @@
     <title>德州扑克概率计算器</title>
     
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='24' fill='%231a472a'/%3E%3Ctext x='96' y='120' font-size='100' text-anchor='middle' fill='%23ffd700'%3E♠%3C/text%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='24' fill='%23000'/%3E%3Ctext x='96' y='120' font-size='100' text-anchor='middle' fill='%23fff'%3E♠%3C/text%3E%3C/svg%3E">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>♠ 德州扑克概率计算器 ♥</h1>
+            <h1>扑克概率计算器</h1>
             <p>选花色 → 选数字，组合成牌计算概率</p>
         </header>
 
@@ -33,17 +33,17 @@
 
         <!-- 已选牌展示 -->
         <div class="section">
-            <h2>🃏 当前选择</h2>
+            <div class="section-title">🃏 当前选择</div>
             <div class="selected-cards-area">
                 <div class="card-group">
-                    <h3>你的手牌 (2张)</h3>
+                    <div class="card-group-label">你的手牌 (2张)</div>
                     <div class="card-slots" id="hole-slots">
                         <div class="card-slot" data-index="0" onclick="removeHoleCard(0)"></div>
                         <div class="card-slot" data-index="1" onclick="removeHoleCard(1)"></div>
                     </div>
                 </div>
                 <div class="card-group">
-                    <h3>公共牌 (0-5张)</h3>
+                    <div class="card-group-label">公共牌 (0-5张)</div>
                     <div class="card-slots" id="community-slots">
                         <div class="card-slot" data-index="0" onclick="removeCommunityCard(0)"></div>
                         <div class="card-slot" data-index="1" onclick="removeCommunityCard(1)"></div>
@@ -57,13 +57,10 @@
 
         <!-- 两步选牌区域 -->
         <div class="section">
-            <h2>🎯 选择手牌</h2>
+            <div class="section-title">🎯 选择手牌</div>
             
-            <!-- 提示语 -->
             <div class="picker-hint" id="picker-hint">
-                <span class="hint-step active">① 选一个花色</span>
-                <span class="hint-arrow">→</span>
-                <span class="hint-step">② 选一个数字</span>
+                <strong>① 选一个花色</strong> → <strong>② 选一个数字</strong>
             </div>
             
             <!-- 花色选择 -->
@@ -87,16 +84,14 @@
             </div>
             
             <!-- 数字选择 -->
-            <div class="rank-picker" id="rank-picker">
-                <!-- 由JS生成 -->
-            </div>
+            <div class="rank-picker" id="rank-picker"></div>
         </div>
 
         <!-- 操作按钮 -->
         <div class="section" style="text-align:center;">
             <div class="actions">
-                <button class="btn btn-primary" id="calc-btn" onclick="calculate()" disabled>🚀 计算概率</button>
-                <button class="btn btn-secondary" onclick="clearAll()">🗑️ 清除全部</button>
+                <button class="btn btn-primary" id="calc-btn" onclick="calculate()" disabled>计算概率</button>
+                <button class="btn btn-secondary" onclick="clearAll()">清除全部</button>
             </div>
         </div>
 
@@ -108,21 +103,21 @@
 
         <!-- 结果展示 -->
         <div class="section result-section" id="result-area">
-            <h2>📊 概率分析</h2>
+            <div class="section-title">📊 概率分析</div>
             <div class="result-info" id="result-info"></div>
             <div class="probability-list" id="probability-list"></div>
         </div>
 
         <footer>
-            <p>德州扑克概率计算器 | 仅供学习娱乐 | 理性游戏</p>
+            <p>仅供学习娱乐使用 · 请理性游戏</p>
         </footer>
     </div>
 
     <!-- PWA 安装提示条 -->
     <div class="pwa-install-banner" id="pwa-banner">
-        <span>📲 添加到主屏幕，像App一样使用</span>
-        <button class="btn btn-primary" id="pwa-install-btn" onclick="installPWA()">安装</button>
-        <button class="btn btn-secondary" onclick="dismissPWA()" style="padding:8px 14px;font-size:0.85em;">✕</button>
+        <span>添加到主屏幕，像App一样使用</span>
+        <button class="btn btn-primary" id="pwa-install-btn" onclick="installPWA()" style="padding:8px 20px;font-size:0.85em;min-height:auto;">安装</button>
+        <button class="btn btn-secondary" onclick="dismissPWA()" style="padding:8px 14px;font-size:0.85em;min-height:auto;">✕</button>
     </div>
 
     <script src="js/poker-engine.js"></script>
@@ -176,7 +171,7 @@
         // ============ 核心逻辑 ============
         let holeCards = [];
         let communityCards = [];
-        let selectedSuit = '♠'; // 默认选中黑桃
+        let selectedSuit = '♠';
         const RANKS_ORDER = ['A', 'K', 'Q', 'J', '10', '9', '8', '7', '6', '5', '4', '3', '2'];
 
         function init() {
@@ -184,7 +179,6 @@
             updateUI();
         }
 
-        // 渲染数字选择器
         function renderRankPicker() {
             const container = document.getElementById('rank-picker');
             container.innerHTML = '';
@@ -200,30 +194,24 @@
             }
         }
 
-        // 选择花色
         function selectSuit(suit) {
             selectedSuit = suit;
             updateSuitButtons();
             updateRankButtons();
         }
 
-        // 点击数字按钮
         function onRankClick(rank) {
             const cardStr = selectedSuit + rank;
             const card = new Card(selectedSuit, rank);
             
-            // 检查这张牌是否已选
             const inHole = holeCards.find(c => c.toString() === cardStr);
             const inCommunity = communityCards.find(c => c.toString() === cardStr);
             
             if (inHole) {
-                // 取消手牌中的这张
                 holeCards = holeCards.filter(c => c.toString() !== cardStr);
             } else if (inCommunity) {
-                // 取消公共牌中的这张
                 communityCards = communityCards.filter(c => c.toString() !== cardStr);
             } else {
-                // 添加新牌
                 if (holeCards.length < 2) {
                     holeCards.push(card);
                 } else if (communityCards.length < 5) {
@@ -256,7 +244,6 @@
             updateUI();
         }
 
-        // 更新花色按钮状态
         function updateSuitButtons() {
             document.querySelectorAll('.suit-btn').forEach(btn => {
                 const suit = btn.dataset.suit;
@@ -264,13 +251,11 @@
             });
         }
 
-        // 更新数字按钮状态
         function updateRankButtons() {
             document.querySelectorAll('.rank-btn').forEach(btn => {
                 const rank = btn.dataset.rank;
                 const cardStr = selectedSuit + rank;
                 
-                // 检查这个rank的任何花色是否已被选
                 let isSelected = false;
                 for (const s of SUITS) {
                     const cs = s + rank;
@@ -281,7 +266,6 @@
                     }
                 }
                 
-                // 检查当前花色+该rank是否被选中
                 const isCurrentSelected = holeCards.find(c => c.toString() === cardStr) || 
                                           communityCards.find(c => c.toString() === cardStr);
                 
@@ -290,11 +274,9 @@
                 if (isCurrentSelected) {
                     btn.classList.add('selected');
                 } else if (isSelected) {
-                    // 其他花色已选了这个数字，但当前花色没选
                     btn.classList.add('other-suit');
                 }
                 
-                // 如果牌已经满了（2手牌+5公共牌），禁用
                 if (holeCards.length >= 2 && communityCards.length >= 5 && !isSelected) {
                     btn.classList.add('disabled');
                 }
@@ -302,7 +284,6 @@
         }
 
         function updateUI() {
-            // 更新手牌显示
             const holeSlots = document.getElementById('hole-slots').children;
             for (let i = 0; i < 2; i++) {
                 const slot = holeSlots[i];
@@ -316,7 +297,6 @@
                 }
             }
             
-            // 更新公共牌显示
             const commSlots = document.getElementById('community-slots').children;
             for (let i = 0; i < 5; i++) {
                 const slot = commSlots[i];
@@ -330,16 +310,10 @@
                 }
             }
             
-            // 更新提示语
             updateHint();
-            
-            // 更新花色按钮
             updateSuitButtons();
-            
-            // 更新数字按钮
             updateRankButtons();
             
-            // 更新阶段指示器
             const stages = ['preflop', 'flop', 'turn', 'river'];
             const cc = communityCards.length;
             let active = cc >= 5 ? 3 : cc >= 4 ? 2 : cc >= 3 ? 1 : 0;
@@ -348,30 +322,19 @@
                 el.classList.toggle('active', i === active);
             });
             
-            // 更新计算按钮
             document.getElementById('calc-btn').disabled = holeCards.length !== 2;
         }
 
         function updateHint() {
             const hint = document.getElementById('picker-hint');
-            const total = holeCards.length + communityCards.length;
-            const maxCards = 7;
             
             let hintHTML = '';
             if (holeCards.length < 2) {
-                hintHTML = `
-                    <span class="hint-step active">① 选花色 → ② 选数字</span>
-                    <span style="color:#ffd700;margin-left:8px;">(${2 - holeCards.length}张手牌)</span>
-                `;
+                hintHTML = `<strong>① 选花色 → ② 选数字</strong> <span style="color:var(--text-secondary);margin-left:8px;">还需 ${2 - holeCards.length} 张手牌</span>`;
             } else if (communityCards.length < 5) {
-                hintHTML = `
-                    <span class="hint-step active">① 选花色 → ② 选数字</span>
-                    <span style="color:#ffd700;margin-left:8px;">(${5 - communityCards.length}张公共牌)</span>
-                `;
+                hintHTML = `<strong>① 选花色 → ② 选数字</strong> <span style="color:var(--text-secondary);margin-left:8px;">还需 ${5 - communityCards.length} 张公共牌</span>`;
             } else {
-                hintHTML = `
-                    <span class="hint-step active" style="color:#4caf50;">✓ 已选满 ${total} 张牌，可以计算了！</span>
-                `;
+                hintHTML = `<span style="color:var(--success);">✓ 已选满 ${holeCards.length + communityCards.length} 张牌，可以计算了</span>`;
             }
             hint.innerHTML = hintHTML;
         }
@@ -395,7 +358,7 @@
             setTimeout(() => {
                 const result = calculateProbabilities(holeCards, communityCards);
                 progressFill.style.width = '100%';
-                progressText.textContent = '计算完成！';
+                progressText.textContent = '计算完成';
                 setTimeout(() => {
                     progressArea.classList.remove('visible');
                     showResults(result);
@@ -411,9 +374,9 @@
             const methodText = result.exact ? '精确计算' : '蒙特卡洛模拟';
             const badgeClass = result.exact ? 'exact-badge' : 'monte-badge';
             resultInfo.innerHTML = `
-                <div>${getStageName()}</div>
+                <div style="margin-bottom:4px;">${getStageName()}</div>
                 <div><span class="${badgeClass}">${methodText}</span></div>
-                <div style="margin-top:4px;font-size:0.8em;color:#888;">评估 ${result.total.toLocaleString()} 种组合</div>
+                <div style="margin-top:6px;font-size:0.8rem;color:var(--text-muted);">评估 ${result.total.toLocaleString()} 种组合</div>
             `;
             
             probList.innerHTML = '';
