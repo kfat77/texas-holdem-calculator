@@ -1,4 +1,4 @@
-/* 德州扑克概率计算器 - Tesla 极简科技风格 */
+/* 德州扑克概率计算器 - 绿色赌桌风格 */
 
 * {
     margin: 0;
@@ -8,29 +8,28 @@
 }
 
 :root {
-    --bg-primary: #000000;
-    --bg-card: #171a20;
-    --bg-card-hover: #22262e;
-    --bg-input: #22262e;
+    --bg-primary: #0d3320;
+    --bg-card: rgba(0,0,0,0.35);
+    --bg-card-hover: rgba(0,0,0,0.45);
+    --bg-input: rgba(0,0,0,0.25);
     --text-primary: #ffffff;
-    --text-secondary: #8e8e93;
-    --text-muted: #5c5c5e;
-    --accent: #3e6ae1;
-    --accent-hover: #3457b1;
-    --border: #393c41;
-    --border-light: rgba(255,255,255,0.1);
-    --success: #12bb6a;
-    --warning: #f5a623;
-    --danger: #e82127;
+    --text-secondary: #b0c4b1;
+    --text-muted: #6b8f71;
+    --border: rgba(255,255,255,0.12);
+    --border-light: rgba(255,255,255,0.08);
+    --accent: #ffd700;
+    --success: #4caf50;
+    --warning: #ff9800;
+    --danger: #f44336;
     --radius-sm: 8px;
     --radius-md: 12px;
-    --radius-lg: 20px;
+    --radius-lg: 16px;
     --radius-full: 100px;
 }
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    background: var(--bg-primary);
+    background: linear-gradient(135deg, #1a472a 0%, #0d3320 50%, #1a472a 100%);
     color: var(--text-primary);
     min-height: 100vh;
     min-height: 100dvh;
@@ -42,39 +41,39 @@ body {
 .container {
     max-width: 680px;
     margin: 0 auto;
-    padding: 0 24px 60px;
+    padding: 0 20px 60px;
 }
 
 /* ========== 头部 ========== */
 header {
     text-align: center;
-    padding: 48px 0 32px;
+    padding: 36px 0 24px;
 }
 
 header h1 {
-    font-size: clamp(1.8rem, 5vw, 2.8rem);
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    margin-bottom: 8px;
-    color: var(--text-primary);
+    font-size: clamp(1.6rem, 5vw, 2.4rem);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin-bottom: 6px;
+    color: #ffd700;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
 header p {
     color: var(--text-secondary);
-    font-size: clamp(0.9rem, 2.5vw, 1.05rem);
+    font-size: clamp(0.85rem, 2.5vw, 1rem);
     font-weight: 400;
 }
 
-/* ========== 阶段指示器（轻量文字样式） ========== */
+/* ========== 阶段指示器 ========== */
 .stage-indicator {
     display: flex;
     justify-content: center;
     gap: 24px;
-    margin: 0 0 28px;
+    margin: 0 0 24px;
     padding: 0;
     background: transparent;
     border-radius: 0;
-    max-width: none;
 }
 
 .stage-item {
@@ -82,7 +81,7 @@ header p {
     padding: 4px 0;
     border-radius: 0;
     color: var(--text-muted);
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     font-weight: 500;
     transition: all 0.3s ease;
     cursor: default;
@@ -92,8 +91,8 @@ header p {
 
 .stage-item.active {
     background: transparent;
-    color: var(--text-primary);
-    font-weight: 600;
+    color: #ffd700;
+    font-weight: 700;
 }
 
 .stage-item.active::after {
@@ -103,59 +102,25 @@ header p {
     left: 0;
     right: 0;
     height: 2px;
-    background: var(--text-primary);
+    background: #ffd700;
     border-radius: 1px;
-}
-.stage-indicator {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    margin: 0 0 24px;
-    padding: 4px;
-    background: var(--bg-card);
-    border-radius: var(--radius-full);
-    max-width: 400px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.stage-item {
-    flex: 1;
-    text-align: center;
-    padding: 8px 4px;
-    border-radius: var(--radius-full);
-    color: var(--text-muted);
-    font-size: clamp(0.7rem, 1.8vw, 0.82rem);
-    font-weight: 500;
-    transition: all 0.3s ease;
-    cursor: default;
-}
-
-.stage-item.active {
-    background: var(--text-primary);
-    color: var(--bg-primary);
-    font-weight: 600;
 }
 
 /* ========== 区域通用样式 ========== */
 .section {
     background: var(--bg-card);
     border-radius: var(--radius-lg);
-    padding: 24px;
-    margin-bottom: 16px;
+    padding: 20px;
+    margin-bottom: 14px;
     border: 1px solid var(--border);
-    transition: border-color 0.2s;
-}
-
-.section:hover {
-    border-color: var(--border-light);
+    backdrop-filter: blur(4px);
 }
 
 .section-title {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 20px;
+    color: #ffd700;
+    margin-bottom: 16px;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -164,80 +129,80 @@ header p {
 /* ========== 已选牌区域 ========== */
 .selected-cards-area {
     display: flex;
-    gap: 16px;
+    gap: 14px;
     flex-wrap: wrap;
 }
 
 .card-group {
     flex: 1;
-    min-width: 140px;
+    min-width: 130px;
 }
 
 .card-group-label {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     color: var(--text-secondary);
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.03em;
 }
 
 .card-slots {
     display: flex;
-    gap: 10px;
-    min-height: 76px;
-    padding: 12px;
+    gap: 8px;
+    min-height: 68px;
+    padding: 10px;
     background: var(--bg-input);
     border-radius: var(--radius-md);
     justify-content: center;
     align-items: center;
+    border: 2px dashed rgba(255,255,255,0.1);
 }
 
 .card-slot {
-    width: 52px;
-    height: 72px;
+    width: 48px;
+    height: 66px;
     border-radius: var(--radius-sm);
-    background: rgba(255,255,255,0.04);
+    background: rgba(255,255,255,0.06);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
+    font-size: 1.4rem;
     cursor: pointer;
     transition: all 0.2s ease;
-    border: 1.5px solid transparent;
+    border: 2px solid transparent;
     user-select: none;
     -webkit-user-select: none;
     color: var(--text-muted);
 }
 
 .card-slot:hover {
-    border-color: var(--border);
+    border-color: rgba(255,215,0,0.4);
 }
 
 .card-slot.filled {
-    background: #ffffff;
-    box-shadow: 0 2px 12px rgba(255,255,255,0.15);
+    background: #fff;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
     font-weight: 600;
 }
 
 .card-slot.filled.red {
-    color: #e82127;
+    color: #d32f2f;
 }
 
 .card-slot.filled.black {
-    color: #171a20;
+    color: #212121;
 }
 
 /* ========== 选牌提示 ========== */
 .picker-hint {
     text-align: center;
-    margin-bottom: 20px;
-    font-size: 0.95rem;
+    margin-bottom: 16px;
+    font-size: 0.9rem;
     color: var(--text-secondary);
 }
 
 .picker-hint strong {
-    color: var(--text-primary);
+    color: #ffd700;
     font-weight: 600;
 }
 
@@ -245,8 +210,8 @@ header p {
 .suit-picker {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    margin-bottom: 20px;
+    gap: 8px;
+    margin-bottom: 16px;
 }
 
 .suit-btn {
@@ -254,22 +219,22 @@ header p {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 16px 8px;
+    padding: 14px 6px;
     border-radius: var(--radius-md);
     border: 1.5px solid var(--border);
-    background: transparent;
+    background: rgba(255,255,255,0.04);
     color: var(--text-primary);
     cursor: pointer;
     transition: all 0.2s ease;
     user-select: none;
     -webkit-user-select: none;
     touch-action: manipulation;
-    gap: 4px;
+    gap: 3px;
 }
 
 .suit-btn:hover {
-    background: var(--bg-card-hover);
-    border-color: var(--text-secondary);
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.2);
 }
 
 .suit-btn:active {
@@ -277,45 +242,45 @@ header p {
 }
 
 .suit-btn .suit-icon {
-    font-size: 2rem;
+    font-size: 1.8rem;
     line-height: 1;
-    margin-bottom: 2px;
 }
 
 .suit-btn[data-suit="♠"] .suit-icon,
 .suit-btn[data-suit="♣"] .suit-icon {
-    color: var(--text-primary);
+    color: #fff;
 }
 
 .suit-btn[data-suit="♥"] .suit-icon,
 .suit-btn[data-suit="♦"] .suit-icon {
-    color: #ff4d4d;
+    color: #ff6b6b;
 }
 
 .suit-btn .suit-name {
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     color: var(--text-muted);
     font-weight: 500;
 }
 
 .suit-btn.active {
-    background: var(--text-primary);
-    border-color: var(--text-primary);
+    background: #ffd700;
+    border-color: #ffd700;
+    box-shadow: 0 0 16px rgba(255,215,0,0.3);
 }
 
 .suit-btn.active .suit-icon {
-    color: var(--bg-primary) !important;
+    color: #1a472a !important;
 }
 
 .suit-btn.active .suit-name {
-    color: var(--bg-primary);
+    color: #1a472a;
 }
 
 /* ========== 数字选择器 ========== */
 .rank-picker {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 6px;
+    gap: 5px;
 }
 
 @media (min-width: 600px) {
@@ -324,25 +289,14 @@ header p {
         gap: 4px;
     }
 }
-.rank-picker {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 8px;
-}
-
-@media (min-width: 600px) {
-    .rank-picker {
-        grid-template-columns: repeat(13, 1fr);
-    }
-}
 
 .rank-btn {
     aspect-ratio: 1;
     border-radius: var(--radius-sm);
-    border: 1.5px solid var(--border);
-    background: transparent;
-    color: var(--text-primary);
-    font-size: 1.15rem;
+    border: 1.5px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.04);
+    color: #fff;
+    font-size: 1.05rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.15s ease;
@@ -354,12 +308,12 @@ header p {
     touch-action: manipulation;
     font-family: inherit;
     padding: 0;
-    min-height: 44px;
+    min-height: 42px;
 }
 
 .rank-btn:hover {
-    background: var(--bg-card-hover);
-    border-color: var(--text-secondary);
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.25);
 }
 
 .rank-btn:active {
@@ -367,20 +321,21 @@ header p {
 }
 
 .rank-btn.selected {
-    background: var(--text-primary);
-    color: var(--bg-primary);
-    border-color: var(--text-primary);
-    box-shadow: 0 0 16px rgba(255,255,255,0.2);
+    background: #ffd700;
+    color: #1a472a;
+    border-color: #ffd700;
+    box-shadow: 0 0 14px rgba(255,215,0,0.35);
+    font-weight: 700;
 }
 
 .rank-btn.other-suit {
-    background: rgba(255,255,255,0.04);
-    border-color: rgba(255,255,255,0.05);
-    color: var(--text-muted);
+    background: rgba(100,100,100,0.15);
+    border-color: rgba(255,255,255,0.06);
+    color: #5a7a5e;
 }
 
 .rank-btn.disabled {
-    opacity: 0.15;
+    opacity: 0.2;
     cursor: not-allowed;
     pointer-events: none;
 }
@@ -414,30 +369,32 @@ header p {
 }
 
 .btn-primary {
-    background: var(--text-primary);
-    color: var(--bg-primary);
+    background: linear-gradient(135deg, #ffd700, #ffaa00);
+    color: #1a472a;
+    box-shadow: 0 4px 15px rgba(255,215,0,0.25);
 }
 
 .btn-primary:hover:not(:disabled) {
-    background: #e0e0e0;
-    box-shadow: 0 4px 20px rgba(255,255,255,0.15);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 22px rgba(255,215,0,0.4);
 }
 
 .btn-primary:disabled {
-    background: #333;
-    color: #666;
+    background: #555;
+    color: #888;
     cursor: not-allowed;
+    box-shadow: none;
 }
 
 .btn-secondary {
     background: transparent;
-    color: var(--text-primary);
-    border: 1.5px solid var(--border);
+    color: #fff;
+    border: 1.5px solid rgba(255,255,255,0.2);
 }
 
 .btn-secondary:hover {
-    background: var(--bg-card-hover);
-    border-color: var(--text-secondary);
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.35);
 }
 
 /* ========== 结果区域 ========== */
@@ -447,38 +404,38 @@ header p {
 
 .result-section.visible {
     display: block;
-    animation: fadeIn 0.5s ease;
+    animation: fadeIn 0.4s ease;
 }
 
 .result-info {
     text-align: center;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
     color: var(--text-secondary);
-    font-size: 0.9rem;
+    font-size: 0.88rem;
 }
 
 .result-info .exact-badge {
     display: inline-block;
     padding: 4px 14px;
     border-radius: var(--radius-full);
-    background: rgba(18,187,106,0.15);
-    color: var(--success);
-    font-size: 0.8rem;
+    background: rgba(76,175,80,0.2);
+    color: #81c784;
+    font-size: 0.78rem;
     font-weight: 600;
     margin: 4px 2px;
-    border: 1px solid rgba(18,187,106,0.3);
+    border: 1px solid rgba(76,175,80,0.3);
 }
 
 .result-info .monte-badge {
     display: inline-block;
     padding: 4px 14px;
     border-radius: var(--radius-full);
-    background: rgba(245,166,35,0.15);
-    color: var(--warning);
-    font-size: 0.8rem;
+    background: rgba(255,152,0,0.15);
+    color: #ffb74d;
+    font-size: 0.78rem;
     font-weight: 600;
     margin: 4px 2px;
-    border: 1px solid rgba(245,166,35,0.3);
+    border: 1px solid rgba(255,152,0,0.3);
 }
 
 /* ========== 概率条 ========== */
@@ -491,22 +448,22 @@ header p {
 .prob-item {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 }
 
 .prob-label {
     width: clamp(56px, 16vw, 90px);
     text-align: right;
     font-weight: 600;
-    font-size: 0.88rem;
+    font-size: 0.85rem;
     flex-shrink: 0;
     color: var(--text-secondary);
 }
 
 .prob-bar-container {
     flex: 1;
-    height: 32px;
-    background: var(--bg-input);
+    height: 30px;
+    background: rgba(0,0,0,0.25);
     border-radius: var(--radius-full);
     overflow: hidden;
     position: relative;
@@ -519,22 +476,22 @@ header p {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    padding-right: 14px;
+    padding-right: 12px;
     font-weight: 600;
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     min-width: 50px;
     white-space: nowrap;
 }
 
-.prob-bar.high { background: linear-gradient(90deg, #12bb6a, #0d9c56); color: #fff; }
-.prob-bar.medium { background: linear-gradient(90deg, #f5a623, #d48c1a); color: #fff; }
-.prob-bar.low { background: linear-gradient(90deg, #e82127, #c41a1f); color: #fff; }
-.prob-bar.very-low { background: linear-gradient(90deg, #7c3aed, #5b21b6); color: #fff; }
+.prob-bar.high { background: linear-gradient(90deg, #4caf50, #81c784); color: #fff; }
+.prob-bar.medium { background: linear-gradient(90deg, #ff9800, #ffb74d); color: #fff; }
+.prob-bar.low { background: linear-gradient(90deg, #f44336, #ef5350); color: #fff; }
+.prob-bar.very-low { background: linear-gradient(90deg, #9c27b0, #ba68c8); color: #fff; }
 
 /* ========== 进度条 ========== */
 .progress-container {
     display: none;
-    margin: 16px 0;
+    margin: 14px 0;
     text-align: center;
 }
 
@@ -545,31 +502,31 @@ header p {
 .progress-bar {
     width: 100%;
     height: 4px;
-    background: var(--bg-input);
+    background: rgba(0,0,0,0.25);
     border-radius: 2px;
     overflow: hidden;
-    margin: 12px 0;
+    margin: 10px 0;
 }
 
 .progress-fill {
     height: 100%;
-    background: var(--text-primary);
+    background: linear-gradient(90deg, #ffd700, #ffaa00);
     border-radius: 2px;
     transition: width 0.3s ease;
     width: 0%;
 }
 
 .progress-text {
-    color: var(--text-secondary);
-    font-size: 0.85rem;
+    color: #ffd700;
+    font-size: 0.82rem;
 }
 
 /* ========== 页脚 ========== */
 footer {
     text-align: center;
-    padding: 32px 10px;
+    padding: 28px 10px;
     color: var(--text-muted);
-    font-size: 0.78rem;
+    font-size: 0.75rem;
     letter-spacing: 0.02em;
 }
 
@@ -580,14 +537,14 @@ footer {
     bottom: 0;
     left: 0;
     right: 0;
-    background: var(--bg-card);
-    border-top: 1px solid var(--border);
-    padding: 16px 20px;
+    background: rgba(13,51,32,0.95);
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding: 14px 18px;
     z-index: 1000;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    box-shadow: 0 -8px 32px rgba(0,0,0,0.5);
+    gap: 10px;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
 }
 
 .pwa-install-banner.show {
@@ -595,22 +552,15 @@ footer {
 }
 
 .pwa-install-banner span {
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     color: var(--text-secondary);
-}
-
-/* ========== 分隔线 ========== */
-.divider {
-    height: 1px;
-    background: var(--border);
-    margin: 16px 0;
 }
 
 /* ========== 响应式断点 ========== */
 @media (max-width: 600px) {
-    .container { padding: 0 16px 40px; }
-    .section { padding: 20px; border-radius: 16px; }
-    header { padding: 32px 0 24px; }
+    .container { padding: 0 14px 40px; }
+    .section { padding: 18px; border-radius: 14px; }
+    header { padding: 28px 0 20px; }
     
     .suit-btn { padding: 12px 4px; }
     .suit-btn .suit-icon { font-size: 1.6rem; }
@@ -626,13 +576,13 @@ footer {
     .suit-btn { border-radius: 10px; padding: 10px 2px; }
     .suit-btn .suit-name { font-size: 0.65rem; }
     
-    .rank-picker { gap: 5px; }
+    .rank-picker { gap: 4px; }
     .rank-btn { border-radius: 8px; font-size: 0.9rem; }
 }
 
 /* ========== 动画 ========== */
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(16px); }
+    from { opacity: 0; transform: translateY(12px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
