@@ -698,7 +698,55 @@ footer {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* ========== 减少动画偏好 ========== */
+/* ========== 语言切换器 ========== */
+.lang-switcher {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    gap: 4px;
+    z-index: 10;
+}
+
+.lang-btn {
+    padding: 5px 12px;
+    border-radius: var(--radius-full);
+    border: 1.5px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.04);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+}
+
+.lang-btn:hover {
+    border-color: rgba(255,215,0,0.4);
+    color: #ffd700;
+}
+
+.lang-btn.active {
+    background: #ffd700;
+    border-color: #ffd700;
+    color: #1a472a;
+    box-shadow: 0 0 10px rgba(255,215,0,0.3);
+}
+
+/* 响应式语言切换器 */
+@media (max-width: 600px) {
+    .lang-switcher {
+        top: 8px;
+        right: 8px;
+    }
+    .lang-btn {
+        padding: 4px 10px;
+        font-size: 0.7rem;
+    }
+}
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
         animation-duration: 0.01ms !important;

@@ -10,40 +10,47 @@
     <meta name="description" content="德州扑克概率计算器 - 支持全阶段牌型概率计算，纯前端无需联网">
     <meta name="format-detection" content="telephone=no">
     
-    <title>德州扑克概率计算器</title>
+    <title data-i18n="app.title">扑克概率计算器</title>
     
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='24' fill='%230d3320'/%3E%3Ctext x='96' y='120' font-size='100' text-anchor='middle' fill='%23ffd700'%3E♠%3C/text%3E%3C/svg%3E">
     <link rel="stylesheet" href="css/style.css">
+    <script src="js/i18n.js"></script>
 </head>
 <body>
     <div class="container">
+        <!-- 语言切换器 -->
+        <div class="lang-switcher" id="lang-switcher">
+            <button class="lang-btn active" data-lang="zh" onclick="setLanguage('zh')">简</button>
+            <button class="lang-btn" data-lang="en" onclick="setLanguage('en')">En</button>
+        </div>
+
         <header>
-            <h1>扑克概率计算器</h1>
-            <p>选花色 → 选数字，组合成牌计算概率</p>
+            <h1 data-i18n="app.title">扑克概率计算器</h1>
+            <p data-i18n="app.subtitle">选花色 → 选数字，组合成牌计算概率</p>
         </header>
 
         <!-- 阶段指示器 -->
         <div class="stage-indicator" id="stage-indicator">
-            <div class="stage-item active" id="stage-preflop" data-stage="0">Pre-flop</div>
-            <div class="stage-item" id="stage-flop" data-stage="3">Flop</div>
-            <div class="stage-item" id="stage-turn" data-stage="4">Turn</div>
-            <div class="stage-item" id="stage-river" data-stage="5">River</div>
+            <div class="stage-item active" id="stage-preflop" data-stage="0" data-i18n="stage.preflop">Pre-flop</div>
+            <div class="stage-item" id="stage-flop" data-stage="3" data-i18n="stage.flop">Flop</div>
+            <div class="stage-item" id="stage-turn" data-stage="4" data-i18n="stage.turn">Turn</div>
+            <div class="stage-item" id="stage-river" data-stage="5" data-i18n="stage.river">River</div>
         </div>
 
         <!-- 已选牌展示 -->
         <div class="section">
-            <div class="section-title">🃏 当前选择</div>
+            <div class="section-title" data-i18n="section.currentSelection">🃏 当前选择</div>
             <div class="selected-cards-area">
                 <div class="card-group">
-                    <div class="card-group-label">你的手牌 (2张)</div>
+                    <div class="card-group-label" data-i18n="section.holeCards">你的手牌 (2张)</div>
                     <div class="card-slots" id="hole-slots">
                         <div class="card-slot" data-index="0" onclick="removeHoleCard(0)"></div>
                         <div class="card-slot" data-index="1" onclick="removeHoleCard(1)"></div>
                     </div>
                 </div>
                 <div class="card-group">
-                    <div class="card-group-label">公共牌 (0-5张)</div>
+                    <div class="card-group-label" data-i18n="section.communityCards">公共牌 (0-5张)</div>
                     <div class="card-slots" id="community-slots">
                         <div class="card-slot" data-index="0" onclick="removeCommunityCard(0)"></div>
                         <div class="card-slot" data-index="1" onclick="removeCommunityCard(1)"></div>
@@ -57,29 +64,29 @@
 
         <!-- 两步选牌区域 -->
         <div class="section">
-            <div class="section-title">🎯 选择手牌</div>
+            <div class="section-title" data-i18n="section.selectCards">🎯 选择手牌</div>
             
             <div class="picker-hint" id="picker-hint">
-                <strong>① 选一个花色</strong> → <strong>② 选一个数字</strong>
+                <strong data-i18n="section.pickerHint">① 选一个花色 → ② 选一个数字</strong>
             </div>
             
             <!-- 花色选择 -->
             <div class="suit-picker" id="suit-picker">
                 <button class="suit-btn" data-suit="♠" onclick="selectSuit('♠')">
                     <span class="suit-icon">♠</span>
-                    <span class="suit-name">黑桃</span>
+                    <span class="suit-name" data-i18n="suit.spade">黑桃</span>
                 </button>
                 <button class="suit-btn" data-suit="♥" onclick="selectSuit('♥')">
                     <span class="suit-icon">♥</span>
-                    <span class="suit-name">红桃</span>
+                    <span class="suit-name" data-i18n="suit.heart">红桃</span>
                 </button>
                 <button class="suit-btn" data-suit="♣" onclick="selectSuit('♣')">
                     <span class="suit-icon">♣</span>
-                    <span class="suit-name">梅花</span>
+                    <span class="suit-name" data-i18n="suit.club">梅花</span>
                 </button>
                 <button class="suit-btn" data-suit="♦" onclick="selectSuit('♦')">
                     <span class="suit-icon">♦</span>
-                    <span class="suit-name">方块</span>
+                    <span class="suit-name" data-i18n="suit.diamond">方块</span>
                 </button>
             </div>
             
@@ -90,21 +97,21 @@
         <!-- 操作按钮 -->
         <div class="section" style="text-align:center;">
             <div class="actions">
-                <button class="btn btn-primary" id="calc-btn" onclick="calculate()" disabled>计算概率</button>
-                <button class="btn btn-secondary" id="undo-btn" onclick="undoLastCard()" disabled>↩️ 撤销</button>
-                <button class="btn btn-secondary" onclick="clearAll()">清除全部</button>
+                <button class="btn btn-primary" id="calc-btn" onclick="calculate()" disabled data-i18n="btn.calc">计算概率</button>
+                <button class="btn btn-secondary" id="undo-btn" onclick="undoLastCard()" disabled data-i18n="btn.undo">↩️ 撤销</button>
+                <button class="btn btn-secondary" onclick="clearAll()" data-i18n="btn.clear">清除全部</button>
             </div>
         </div>
 
         <!-- 进度条 -->
         <div class="progress-container" id="progress-area">
-            <div class="progress-text" id="progress-text">正在计算...</div>
+            <div class="progress-text" id="progress-text" data-i18n="progress.calculating">正在计算中...</div>
             <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
         </div>
 
         <!-- 结果展示 -->
         <div class="section result-section" id="result-area">
-            <div class="section-title">📊 概率分析</div>
+            <div class="section-title" data-i18n="section.probability">📊 概率分析</div>
             <div class="result-info" id="result-info"></div>
             <div class="probability-list" id="probability-list"></div>
         </div>
@@ -112,33 +119,33 @@
         <!-- 资金管理建议 -->
         <div class="section brm-section" id="brm-area">
             <div class="section-title" onclick="toggleBRM()" style="cursor:pointer;user-select:none;">
-                <span id="brm-arrow">▶</span> 💰 资金管理建议
+                <span id="brm-arrow">▶</span> <span data-i18n="brm.title">💰 资金管理建议</span>
             </div>
             <div class="brm-content" id="brm-content" style="display:none;">
-                <div class="brm-desc">基于 BRM · Kelly · RoR · EV 理论的综合行动建议</div>
+                <div class="brm-desc" data-i18n="brm.desc">基于 BRM · Kelly · RoR · EV 理论的综合行动建议</div>
                 
                 <div class="brm-inputs" id="brm-inputs">
                     <div class="brm-input-row">
                         <div class="brm-input-group">
-                            <label>💵 当前资金</label>
-                            <input type="number" id="brm-bankroll" placeholder="例如: 2000" min="0" step="1">
+                            <label data-i18n="brm.label.bankroll">💵 当前资金</label>
+                            <input type="number" id="brm-bankroll" placeholder="2000" min="0" step="1" data-i18n-placeholder="brm.placeholder.bankroll">
                         </div>
                         <div class="brm-input-group">
-                            <label>🎫 买入金额</label>
-                            <input type="number" id="brm-buyin" placeholder="例如: 100" min="1" step="1">
+                            <label data-i18n="brm.label.buyin">🎫 买入金额</label>
+                            <input type="number" id="brm-buyin" placeholder="100" min="1" step="1">
                         </div>
                     </div>
                     <div class="brm-input-row">
                         <div class="brm-input-group">
-                            <label>🏦 当前底池</label>
-                            <input type="number" id="brm-pot" placeholder="例如: 150" min="0" step="1">
+                            <label data-i18n="brm.label.pot">🏦 当前底池</label>
+                            <input type="number" id="brm-pot" placeholder="150" min="0" step="1">
                         </div>
                         <div class="brm-input-group">
-                            <label>📥 需跟注</label>
-                            <input type="number" id="brm-tocall" placeholder="例如: 50" min="0" step="1">
+                            <label data-i18n="brm.label.tocall">📥 需跟注</label>
+                            <input type="number" id="brm-tocall" placeholder="50" min="0" step="1">
                         </div>
                     </div>
-                    <button class="btn btn-primary" id="brm-calc-btn" onclick="calculateBRM()" style="width:100%;margin-top:8px;">
+                    <button class="btn btn-primary" id="brm-calc-btn" onclick="calculateBRM()" style="width:100%;margin-top:8px;" data-i18n="brm.btn.calc">
                         获取资金行动建议
                     </button>
                 </div>
@@ -150,10 +157,10 @@
         <!-- 翻前矩阵 -->
         <div class="section matrix-section" id="matrix-area">
             <div class="section-title" onclick="toggleMatrix()" style="cursor:pointer;user-select:none;">
-                <span id="matrix-arrow">▶</span> 🎯 13×13 翻前手牌矩阵
+                <span id="matrix-arrow">▶</span> <span data-i18n="matrix.title">🎯 13×13 翻前手牌矩阵</span>
             </div>
             <div class="matrix-content" id="matrix-content" style="display:none;">
-                <div class="matrix-desc">按位置查看169种起手牌的标准化范围</div>
+                <div class="matrix-desc" data-i18n="matrix.desc">按位置查看169种起手牌的标准化范围</div>
                 
                 <div class="matrix-positions">
                     <button class="matrix-pos-btn active" data-pos="UTG" onclick="selectMatrixPosition('UTG')">UTG</button>
@@ -165,15 +172,15 @@
                 </div>
                 
                 <div class="matrix-legend">
-                    <span class="matrix-legend-item"><span class="matrix-legend-dot" style="background:#22c55e"></span> 加注</span>
-                    <span class="matrix-legend-item"><span class="matrix-legend-dot" style="background:#3b82f6"></span> 跟注</span>
-                    <span class="matrix-legend-item"><span class="matrix-legend-dot" style="background:#ef4444"></span> 弃牌</span>
+                    <span class="matrix-legend-item"><span class="matrix-legend-dot" style="background:#22c55e"></span> <span data-i18n="matrix.legend.raise">加注</span></span>
+                    <span class="matrix-legend-item"><span class="matrix-legend-dot" style="background:#3b82f6"></span> <span data-i18n="matrix.legend.call">跟注</span></span>
+                    <span class="matrix-legend-item"><span class="matrix-legend-dot" style="background:#ef4444"></span> <span data-i18n="matrix.legend.fold">弃牌</span></span>
                 </div>
                 
                 <div class="matrix-grid" id="matrix-grid"></div>
                 
                 <div class="matrix-info" id="matrix-info">
-                    <div class="matrix-info-text">点击矩阵格子查看该手牌在当前位置的策略</div>
+                    <div class="matrix-info-text" data-i18n="matrix.info">点击矩阵格子查看该手牌在当前位置的策略</div>
                 </div>
             </div>
         </div>
@@ -181,33 +188,33 @@
         <!-- AI 教练聊天 -->
         <div class="section chat-section" id="chat-area">
             <div class="section-title" onclick="toggleChat()" style="cursor:pointer;user-select:none;">
-                <span id="chat-arrow">▶</span> 🤖 AI 扑克教练
+                <span id="chat-arrow">▶</span> <span data-i18n="chat.title">🤖 AI 扑克教练</span>
             </div>
             <div class="chat-content" id="chat-content" style="display:none;">
-                <div class="chat-desc">有任何问题都可以问教练，比如资金管理、起手牌策略、赔率计算等</div>
+                <div class="chat-desc" data-i18n="chat.desc">有任何问题都可以问教练，比如资金管理、起手牌策略、赔率计算等</div>
                 
                 <div class="chat-messages" id="chat-messages">
                     <div class="chat-message coach">
-                        <div class="chat-bubble coach">你好！我是你的扑克教练。有什么可以帮你的吗？可以问我关于资金管理、翻前策略、赔率计算、听牌技巧等问题。</div>
+                        <div class="chat-bubble coach" data-i18n="chat.welcome">你好！我是你的扑克教练。有什么可以帮你的吗？可以问我关于资金管理、翻前策略、赔率计算、听牌技巧等问题。</div>
                     </div>
                 </div>
                 
                 <div class="chat-input-area">
-                    <input type="text" class="chat-input" id="chat-input" placeholder="输入问题..." onkeydown="if(event.key==='Enter')sendChatMessage()">
-                    <button class="btn btn-primary chat-send-btn" onclick="sendChatMessage()">发送</button>
+                    <input type="text" class="chat-input" id="chat-input" data-i18n-placeholder="chat.placeholder" placeholder="输入问题..." onkeydown="if(event.key==='Enter')sendChatMessage()">
+                    <button class="btn btn-primary chat-send-btn" onclick="sendChatMessage()" data-i18n="btn.send">发送</button>
                 </div>
                 
                 <div class="chat-suggestions">
-                    <button class="chat-suggestion-btn" onclick="sendSuggestion('资金只有20个买入，我该用什么策略？')">20买入策略</button>
-                    <button class="chat-suggestion-btn" onclick="sendSuggestion('翻前矩阵里的颜色是什么意思？')">翻前矩阵</button>
-                    <button class="chat-suggestion-btn" onclick="sendSuggestion('Kelly公式在实战中怎么用？')">Kelly公式</button>
-                    <button class="chat-suggestion-btn" onclick="sendSuggestion('如何降低破产风险？')">破产风险</button>
+                    <button class="chat-suggestion-btn" onclick="sendSuggestion('资金只有20个买入，我该用什么策略？')" data-i18n="chat.suggestion1">20买入策略</button>
+                    <button class="chat-suggestion-btn" onclick="sendSuggestion('翻前矩阵里的颜色是什么意思？')" data-i18n="chat.suggestion2">翻前矩阵</button>
+                    <button class="chat-suggestion-btn" onclick="sendSuggestion('Kelly公式在实战中怎么用？')" data-i18n="chat.suggestion3">Kelly公式</button>
+                    <button class="chat-suggestion-btn" onclick="sendSuggestion('如何降低破产风险？')" data-i18n="chat.suggestion4">破产风险</button>
                 </div>
             </div>
         </div>
 
         <footer>
-            <p>仅供学习娱乐使用 · 请理性游戏</p>
+            <p data-i18n="app.footer">仅供学习娱乐使用 · 请理性游戏</p>
         </footer>
     </div>
 
@@ -216,14 +223,14 @@
         <div class="pwa-modal-overlay" onclick="dismissPWA()"></div>
         <div class="pwa-modal-content">
             <div class="pwa-modal-header">
-                <h3>📱 安装到手机桌面</h3>
+                <h3 data-i18n="pwa.title">📱 安装到手机桌面</h3>
                 <button class="pwa-modal-close" onclick="dismissPWA()">✕</button>
             </div>
             <div class="pwa-modal-body" id="pwa-modal-body">
                 <!-- 动态内容 -->
             </div>
             <div class="pwa-modal-footer">
-                <button class="btn btn-secondary" onclick="dismissPWA()">暂不安装</button>
+                <button class="btn btn-secondary" onclick="dismissPWA()" data-i18n="btn.notNow">暂不安装</button>
             </div>
         </div>
     </div>
@@ -236,8 +243,8 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('SW 注册成功'))
-                    .catch(err => console.log('SW 注册失败:', err));
+                    .then(reg => console.log(t('sw.registerSuccess')))
+                    .catch(err => console.log(t('sw.registerFail') + ':', err));
             });
         }
         
@@ -253,67 +260,28 @@
         
         // 获取安装提示内容
         function getInstallGuide(device) {
-            const guides = {
-                ios: `
-                    <div class="pwa-guide-step">
-                        <div class="pwa-guide-num">1</div>
-                        <div class="pwa-guide-text">点击 Safari 底部中间的 <strong>分享按钮</strong> ⬆️</div>
-                    </div>
-                    <div class="pwa-guide-step">
-                        <div class="pwa-guide-num">2</div>
-                        <div class="pwa-guide-text">在菜单中找到并点击「<strong>添加到主屏幕</strong>」</div>
-                    </div>
-                    <div class="pwa-guide-step">
-                        <div class="pwa-guide-num">3</div>
-                        <div class="pwa-guide-text">点击右上角「添加」，桌面即出现 ♠ 图标</div>
-                    </div>
-                `,
-                android: `
-                    <div class="pwa-guide-step">
-                        <div class="pwa-guide-num">1</div>
-                        <div class="pwa-guide-text">点击 Chrome 右上角 <strong>菜单 ⋮</strong></div>
-                    </div>
-                    <div class="pwa-guide-step">
-                        <div class="pwa-guide-num">2</div>
-                        <div class="pwa-guide-text">选择「<strong>添加到主屏幕</strong>」或「安装应用」</div>
-                    </div>
-                    <div class="pwa-guide-step">
-                        <div class="pwa-guide-num">3</div>
-                        <div class="pwa-guide-text">点击「安装」，桌面即出现图标</div>
-                    </div>
-                `,
-                mac: `
-                    <div class="pwa-guide-step">
-                        <div class="pwa-guide-num">1</div>
-                        <div class="pwa-guide-text">点击浏览器地址栏右侧的 <strong>安装图标</strong></div>
-                    </div>
-                    <div class="pwa-guide-step">
-                        <div class="pwa-guide-num">2</div>
-                        <div class="pwa-guide-text">或按 <strong>Command+Shift+A</strong> 打开应用安装</div>
-                    </div>
-                `,
-                windows: `
-                    <div class="pwa-guide-step">
-                        <div class="pwa-guide-num">1</div>
-                        <div class="pwa-guide-text">点击浏览器地址栏右侧的 <strong>安装图标</strong></div>
-                    </div>
-                    <div class="pwa-guide-step">
-                        <div class="pwa-guide-num">2</div>
-                        <div class="pwa-guide-text">或点击菜单 → 应用 → 安装此站点</div>
-                    </div>
-                `,
-                other: `
-                    <div class="pwa-guide-step">
-                        <div class="pwa-guide-num">1</div>
-                        <div class="pwa-guide-text">在浏览器菜单中查找「<strong>安装</strong>」或「<strong>添加到主屏幕</strong>」</div>
-                    </div>
-                    <div class="pwa-guide-step">
-                        <div class="pwa-guide-num">2</div>
-                        <div class="pwa-guide-text">不同浏览器操作略有不同，一般在分享或菜单中</div>
-                    </div>
-                `
-            };
-            return guides[device] || guides.other;
+            const step1 = t('pwa.guide.' + device + '.step1');
+            const step2 = t('pwa.guide.' + device + '.step2');
+            
+            let html = `
+                <div class="pwa-guide-step">
+                    <div class="pwa-guide-num">1</div>
+                    <div class="pwa-guide-text">${step1}</div>
+                </div>
+                <div class="pwa-guide-step">
+                    <div class="pwa-guide-num">2</div>
+                    <div class="pwa-guide-text">${step2}</div>
+                </div>
+            `;
+            if (step3) {
+                html += `
+                <div class="pwa-guide-step">
+                    <div class="pwa-guide-num">3</div>
+                    <div class="pwa-guide-text">${step3}</div>
+                </div>
+                `;
+            }
+            return html;
         }
         
         // 检查是否已 dismiss（7天内不重复提示）
@@ -331,13 +299,13 @@
             const body = document.getElementById('pwa-modal-body');
             body.innerHTML = `
                 <p style="margin-bottom:12px;color:var(--text-secondary);font-size:0.85rem;">
-                    安装后无需联网，随时随地学习扑克策略
+                    ${t('pwa.desc')}
                 </p>
                 <div class="pwa-guide-container">
                     ${getInstallGuide(device)}
                 </div>
                 <p style="margin-top:12px;color:var(--text-muted);font-size:0.75rem;">
-                    💡 已安装？刷新页面即可离线使用全部功能
+                    ${t('pwa.installed')}
                 </p>
             `;
             document.getElementById('pwa-modal').style.display = 'block';
@@ -356,7 +324,7 @@
                 deferredPrompt.prompt();
                 deferredPrompt.userChoice.then((choiceResult) => {
                     if (choiceResult.outcome === 'accepted') {
-                        console.log('用户接受了PWA安装');
+                        console.log(t('pwa.accepted'));
                     }
                     deferredPrompt = null;
                     document.getElementById('pwa-modal').style.display = 'none';
@@ -375,7 +343,7 @@
             document.body.classList.add('standalone');
         }
         
-        // 页面加载后主动展示安装提示（如果不是已安装状态）
+        // 页面加载后主动展示安装提示
         window.addEventListener('load', () => {
             setTimeout(() => {
                 if (!window.matchMedia('(display-mode: standalone)').matches && !navigator.standalone) {
@@ -405,7 +373,7 @@
                 btn.className = 'rank-btn';
                 btn.textContent = rank;
                 btn.dataset.rank = rank;
-                btn.setAttribute('aria-label', '数字' + rank);
+                btn.setAttribute('aria-label', 'rank' + rank);
                 btn.onclick = () => onRankClick(rank);
                 container.appendChild(btn);
             }
@@ -542,22 +510,22 @@
             if (cc === 0) {
                 activeStage = 'preflop';
                 if (hc < 2) {
-                    stageText = `Pre-flop · 还需${2 - hc}张手牌`;
+                    stageText = `Pre-flop · ${t('hint.needHole', 2 - hc)}`;
                 } else {
-                    stageText = 'Pre-flop · 翻牌前';
+                    stageText = t('stageName.preflop');
                 }
             } else if (cc < 3) {
                 activeStage = 'preflop';
-                stageText = `Pre-flop · 还需${3 - cc}张翻牌`;
+                stageText = `Pre-flop · ${t('hint.needFlop', 3 - cc)}`;
             } else if (cc === 3) {
                 activeStage = 'flop';
-                stageText = 'Flop · 翻牌圈';
+                stageText = t('stageName.flop');
             } else if (cc === 4) {
                 activeStage = 'turn';
-                stageText = 'Turn · 转牌圈';
+                stageText = t('stageName.turn');
             } else if (cc === 5) {
                 activeStage = 'river';
-                stageText = 'River · 河牌圈';
+                stageText = t('stageName.river');
             }
             
             const activeEl = document.getElementById('stage-' + activeStage);
@@ -615,13 +583,13 @@
             
             let hintHTML = '';
             if (hc < 2) {
-                hintHTML = `<strong>① 选花色 → ② 选数字</strong> <span style="color:var(--text-secondary);margin-left:8px;">还需 ${2 - hc} 张手牌</span>`;
+                hintHTML = `<strong data-i18n="section.pickerHint">${t('hint.pickSuitRank')}</strong> <span style="color:var(--text-secondary);margin-left:8px;">${t('hint.needHole', 2 - hc)}</span>`;
             } else if (cc < 3) {
-                hintHTML = `<strong>① 选花色 → ② 选数字</strong> <span style="color:var(--text-secondary);margin-left:8px;">还需 ${3 - cc} 张翻牌</span>`;
+                hintHTML = `<strong data-i18n="section.pickerHint">${t('hint.pickSuitRank')}</strong> <span style="color:var(--text-secondary);margin-left:8px;">${t('hint.needFlop', 3 - cc)}</span>`;
             } else if (cc < 5) {
-                hintHTML = `<strong>① 选花色 → ② 选数字</strong> <span style="color:var(--text-secondary);margin-left:8px;">还需 ${5 - cc} 张公共牌</span>`;
+                hintHTML = `<strong data-i18n="section.pickerHint">${t('hint.pickSuitRank')}</strong> <span style="color:var(--text-secondary);margin-left:8px;">${t('hint.needMore', 5 - cc)}</span>`;
             } else {
-                hintHTML = `<span style="color:var(--success);">✓ 已选满 ${hc + cc} 张牌，可以计算了</span>`;
+                hintHTML = `<span style="color:var(--success);">${t('hint.ready', hc + cc)}</span>`;
             }
             hint.innerHTML = hintHTML;
         }
@@ -638,14 +606,14 @@
             progressFill.style.width = '0%';
             
             await new Promise(r => setTimeout(r, 50));
-            progressText.textContent = '正在计算中...';
+            progressText.textContent = t('progress.calculating');
             progressFill.style.width = '30%';
             await new Promise(r => setTimeout(r, 50));
             
             setTimeout(() => {
                 const result = calculateProbabilities(holeCards, communityCards);
                 progressFill.style.width = '100%';
-                progressText.textContent = '计算完成';
+                progressText.textContent = t('progress.done');
                 setTimeout(() => {
                     progressArea.classList.remove('visible');
                     showResults(result);
@@ -658,12 +626,12 @@
             const resultInfo = document.getElementById('result-info');
             const probList = document.getElementById('probability-list');
             
-            const methodText = result.exact ? '精确计算' : '蒙特卡洛模拟';
+            const methodText = result.exact ? t('method.exact') : t('method.monte');
             const badgeClass = result.exact ? 'exact-badge' : 'monte-badge';
             resultInfo.innerHTML = `
                 <div style="margin-bottom:4px;">${getStageName()}</div>
                 <div><span class="${badgeClass}">${methodText}</span></div>
-                <div style="margin-top:6px;font-size:0.8rem;color:var(--text-muted);">评估 ${result.total.toLocaleString()} 种组合</div>
+                <div style="margin-top:6px;font-size:0.8rem;color:var(--text-muted);">${t('comboCount', result.total.toLocaleString())}</div>
             `;
             
             probList.innerHTML = '';
@@ -699,11 +667,11 @@
 
         function getStageName() {
             const c = communityCards.length;
-            if (c === 0) return 'Pre-flop（翻牌前）';
-            if (c === 3) return 'Flop（翻牌圈）';
-            if (c === 4) return 'Turn（转牌圈）';
-            if (c === 5) return 'River（河牌圈）';
-            return '未知阶段';
+            if (c === 0) return t('stageName.preflop');
+            if (c === 3) return t('stageName.flop');
+            if (c === 4) return t('stageName.turn');
+            if (c === 5) return t('stageName.river');
+            return t('stageName.unknown');
         }
 
         // ============ 资金管理 UI 逻辑 ============
@@ -720,7 +688,7 @@
         
         async function calculateBRM() {
             if (holeCards.length !== 2) {
-                alert('请先选择2张手牌');
+                alert(t('alert.selectTwoCards'));
                 return;
             }
             
@@ -730,28 +698,25 @@
             const toCall = parseFloat(document.getElementById('brm-tocall').value) || 0;
             
             if (bankroll <= 0 || buyIn <= 0) {
-                alert('请输入有效的资金和买入金额');
+                alert(t('alert.validAmount'));
                 return;
             }
             
             const btn = document.getElementById('brm-calc-btn');
             const resultsDiv = document.getElementById('brm-results');
             btn.disabled = true;
-            btn.textContent = '正在计算 Equity...';
-            resultsDiv.innerHTML = '<div class="brm-loading">正在模拟对手手牌计算胜率...</div>';
+            btn.textContent = t('brm.loading');
+            resultsDiv.innerHTML = '<div class="brm-loading">' + t('brm.loading') + '</div>';
             
-            // 让UI更新
             await new Promise(r => setTimeout(r, 50));
             
-            // 计算Equity（蒙特卡洛模拟）
             const equity = calculateEquity(holeCards, communityCards, 5000);
             currentEquity = equity;
             
-            // 获取综合建议
             const advice = getBankrollActionAdvice(equity, potSize, toCall, bankroll, buyIn);
             
             btn.disabled = false;
-            btn.textContent = '获取资金行动建议';
+            btn.textContent = t('brm.btn.calc');
             
             renderBRMAdvice(advice);
         }
@@ -759,13 +724,9 @@
         function renderBRMAdvice(advice) {
             const resultsDiv = document.getElementById('brm-results');
             
-            // 标签HTML
             const tagsHtml = advice.tags.map(t => `<span class="brm-tag">${t}</span>`).join('');
-            
-            // 额外建议HTML
             const extraHtml = advice.extraAdvice.map(e => `<div class="brm-tip">• ${e}</div>`).join('');
             
-            // Kelly条
             const kellyPct = Math.max(0, advice.kelly * 100);
             const halfKellyPct = Math.max(0, advice.halfKelly * 100);
             const quarterKellyPct = Math.max(0, advice.quarterKelly * 100);
@@ -774,46 +735,46 @@
                 <div class="brm-action-card" style="border-color:${advice.actionColor};background:${advice.actionBg}">
                     <div class="brm-action-header">
                         <div class="brm-action-title" style="color:${advice.actionColor}">${advice.action}</div>
-                        <div class="brm-action-confidence">置信度: ${advice.confidence}</div>
+                        <div class="brm-action-confidence">${t('brm.confidence')}: ${advice.confidence}</div>
                     </div>
                     <div class="brm-action-reason">${advice.reasoning}</div>
-                    ${advice.betSize > 0 ? `<div class="brm-action-bet">建议下注: <strong>${advice.betSize}</strong></div>` : ''}
+                    ${advice.betSize > 0 ? `<div class="brm-action-bet">${t('brm.suggestedBet')}: <strong>${advice.betSize}</strong></div>` : ''}
                     <div class="brm-action-tags">${tagsHtml}</div>
                 </div>
                 
                 <div class="brm-metrics">
                     <div class="brm-metric">
-                        <div class="brm-metric-label">胜率 (Equity)</div>
+                        <div class="brm-metric-label">${t('brm.metric.equity')}</div>
                         <div class="brm-metric-value">${(advice.equity * 100).toFixed(1)}%</div>
                     </div>
                     <div class="brm-metric">
-                        <div class="brm-metric-label">底池赔率</div>
+                        <div class="brm-metric-label">${t('brm.metric.potOdds')}</div>
                         <div class="brm-metric-value">${(advice.potOdds * 100).toFixed(1)}%</div>
                     </div>
                     <div class="brm-metric">
-                        <div class="brm-metric-label">期望值 EV</div>
+                        <div class="brm-metric-label">${t('brm.metric.ev')}</div>
                         <div class="brm-metric-value" style="color:${advice.ev >= 0 ? '#4ade80' : '#ef4444'}">${advice.ev >= 0 ? '+' : ''}${advice.ev.toFixed(2)}</div>
                     </div>
                 </div>
                 
                 <div class="brm-kelly-section">
-                    <div class="brm-section-subtitle">📐 Kelly 下注比例建议</div>
+                    <div class="brm-section-subtitle">📐 ${t('brm.kelly.full')} / ${t('brm.kelly.half')} / ${t('brm.kelly.quarter')}</div>
                     <div class="brm-kelly-bar">
-                        <div class="brm-kelly-label">完整凯利</div>
+                        <div class="brm-kelly-label">${t('brm.kelly.full')}</div>
                         <div class="brm-kelly-track">
                             <div class="brm-kelly-fill" style="width:${Math.min(kellyPct, 100)}%;background:#ef4444"></div>
                         </div>
                         <div class="brm-kelly-pct">${kellyPct.toFixed(1)}%</div>
                     </div>
                     <div class="brm-kelly-bar">
-                        <div class="brm-kelly-label">半凯利 ⭐</div>
+                        <div class="brm-kelly-label">${t('brm.kelly.half')}</div>
                         <div class="brm-kelly-track">
                             <div class="brm-kelly-fill" style="width:${Math.min(halfKellyPct, 100)}%;background:#22c55e"></div>
                         </div>
                         <div class="brm-kelly-pct">${halfKellyPct.toFixed(1)}%</div>
                     </div>
                     <div class="brm-kelly-bar">
-                        <div class="brm-kelly-label">四分之一凯利</div>
+                        <div class="brm-kelly-label">${t('brm.kelly.quarter')}</div>
                         <div class="brm-kelly-track">
                             <div class="brm-kelly-fill" style="width:${Math.min(quarterKellyPct, 100)}%;background:#3b82f6"></div>
                         </div>
@@ -822,9 +783,9 @@
                 </div>
                 
                 <div class="brm-brm-section">
-                    <div class="brm-section-subtitle">💼 资金管理状态</div>
+                    <div class="brm-section-subtitle">${t('brm.brmStatus')}</div>
                     <div class="brm-brm-status" style="color:${advice.brm.color}">
-                        ${advice.brm.message} · ${advice.brm.buyIns} 买入
+                        ${advice.brm.message} · ${advice.brm.buyIns} ${getCurrentLang() === 'zh' ? '买入' : 'buy-ins'}
                     </div>
                     <div class="brm-brm-bar">
                         <div class="brm-brm-fill" style="width:${Math.min(advice.brm.buyIns / 50 * 100, 100)}%;background:${advice.brm.color}"></div>
@@ -832,29 +793,20 @@
                 </div>
                 
                 <div class="brm-risk-section">
-                    <div class="brm-section-subtitle">⚠️ 破产风险评估</div>
+                    <div class="brm-section-subtitle">${t('brm.risk')}</div>
                     <div class="brm-risk-value" style="color:${advice.riskOfRuin > 0.1 ? '#ef4444' : advice.riskOfRuin > 0.01 ? '#facc15' : '#4ade80'}">
                         ${(advice.riskOfRuin * 100).toFixed(3)}%
                     </div>
-                    <div class="brm-risk-label">当前级别破产概率</div>
+                    <div class="brm-risk-label">${t('brm.riskLabel')}</div>
                 </div>
                 
                 <div class="brm-tips">
-                    <div class="brm-section-subtitle">💡 补充建议</div>
+                    <div class="brm-section-subtitle">${t('brm.tips')}</div>
                     ${extraHtml}
                 </div>
             `;
             
             resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-
-        function getStageName() {
-            const c = communityCards.length;
-            if (c === 0) return 'Pre-flop（翻牌前）';
-            if (c === 3) return 'Flop（翻牌圈）';
-            if (c === 4) return 'Turn（转牌圈）';
-            if (c === 5) return 'River（河牌圈）';
-            return '未知阶段';
         }
 
         // ============ 翻前矩阵 UI 逻辑 ============
@@ -887,19 +839,16 @@
             
             grid.innerHTML = '';
             
-            // 创建标题行
             const headerRow = document.createElement('div');
             headerRow.className = 'matrix-row';
             headerRow.innerHTML = '<div class="matrix-cell matrix-header"></div>' + 
                 RANKS_MATRIX.map(r => `<div class="matrix-cell matrix-header">${r}</div>`).join('');
             grid.appendChild(headerRow);
             
-            // 创建数据行
             for (let i = 0; i < 13; i++) {
                 const row = document.createElement('div');
                 row.className = 'matrix-row';
                 
-                // 行标题
                 const rowHeader = document.createElement('div');
                 rowHeader.className = 'matrix-cell matrix-header';
                 rowHeader.textContent = RANKS_MATRIX[i];
@@ -922,7 +871,7 @@
                 grid.appendChild(row);
             }
             
-            info.innerHTML = `<div class="matrix-info-text">当前位置: <strong>${result.positionName}</strong> · 点击格子查看策略</div>`;
+            info.innerHTML = `<div class="matrix-info-text">${t('matrix.positionInfo', result.positionName)}</div>`;
         }
         
         function showMatrixCellInfo(cellData) {
@@ -954,7 +903,6 @@
             addChatMessage(message, 'user');
             input.value = '';
             
-            // 模拟AI思考延迟
             setTimeout(() => {
                 const response = getAICoachResponse(message);
                 addChatMessage(response, 'coach');
@@ -980,6 +928,31 @@
             div.textContent = text;
             return div.innerHTML;
         }
+
+        // Listen for language change to re-render dynamic content
+        document.addEventListener('languageChanged', () => {
+            updateUI();
+            if (document.getElementById('brm-content').style.display !== 'none') {
+                const brmResults = document.getElementById('brm-results');
+                if (brmResults.innerHTML) {
+                    // Re-render if there's advice showing
+                    const btn = document.getElementById('brm-calc-btn');
+                    btn.textContent = t('brm.btn.calc');
+                }
+            }
+            if (document.getElementById('matrix-content').style.display !== 'none') {
+                renderMatrix();
+            }
+            // Re-render chat welcome message
+            const chatContainer = document.getElementById('chat-messages');
+            if (chatContainer.children.length === 1) {
+                chatContainer.innerHTML = `
+                    <div class="chat-message coach">
+                        <div class="chat-bubble coach">${t('chat.welcome')}</div>
+                    </div>
+                `;
+            }
+        });
 
         init();
     </script>
