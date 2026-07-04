@@ -17,6 +17,10 @@
   <img src="https://img.shields.io/badge/💰-BRM+Kelly-purple?style=for-the-badge" alt="BRM+Kelly">
 </p>
 
+<p align="center">
+  🇨🇳 <b>中文</b> | 🇺🇸 <a href="./README_EN.md">English</a>
+</p>
+
 ---
 
 ## 🎯 产品简介
@@ -228,7 +232,8 @@ texas-holdem-calculator/
 │   └── test-engine.cjs     # 单元测试
 ├── sw.js                   # Service Worker（PWA离线支持）
 ├── manifest.json           # PWA配置
-└── README.md               # 本文件
+├── README.md               # 中文文档
+└── README_EN.md            # 英文文档
 ```
 
 ### 技术栈
