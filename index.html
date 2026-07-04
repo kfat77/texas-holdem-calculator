@@ -147,16 +147,85 @@
             </div>
         </div>
 
+        <!-- 翻前矩阵 -->
+        <div class="section matrix-section" id="matrix-area">
+            <div class="section-title" onclick="toggleMatrix()" style="cursor:pointer;user-select:none;">
+                <span id="matrix-arrow">▶</span> 🎯 13×13 翻前手牌矩阵
+            </div>
+            <div class="matrix-content" id="matrix-content" style="display:none;">
+                <div class="matrix-desc">按位置查看169种起手牌的标准化范围</div>
+                
+                <div class="matrix-positions">
+                    <button class="matrix-pos-btn active" data-pos="UTG" onclick="selectMatrixPosition('UTG')">UTG</button>
+                    <button class="matrix-pos-btn" data-pos="MP" onclick="selectMatrixPosition('MP')">MP</button>
+                    <button class="matrix-pos-btn" data-pos="CO" onclick="selectMatrixPosition('CO')">CO</button>
+                    <button class="matrix-pos-btn" data-pos="BTN" onclick="selectMatrixPosition('BTN')">BTN</button>
+                    <button class="matrix-pos-btn" data-pos="SB" onclick="selectMatrixPosition('SB')">SB</button>
+                    <button class="matrix-pos-btn" data-pos="BB" onclick="selectMatrixPosition('BB')">BB</button>
+                </div>
+                
+                <div class="matrix-legend">
+                    <span class="matrix-legend-item"><span class="matrix-legend-dot" style="background:#22c55e"></span> 加注</span>
+                    <span class="matrix-legend-item"><span class="matrix-legend-dot" style="background:#3b82f6"></span> 跟注</span>
+                    <span class="matrix-legend-item"><span class="matrix-legend-dot" style="background:#ef4444"></span> 弃牌</span>
+                </div>
+                
+                <div class="matrix-grid" id="matrix-grid"></div>
+                
+                <div class="matrix-info" id="matrix-info">
+                    <div class="matrix-info-text">点击矩阵格子查看该手牌在当前位置的策略</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI 教练聊天 -->
+        <div class="section chat-section" id="chat-area">
+            <div class="section-title" onclick="toggleChat()" style="cursor:pointer;user-select:none;">
+                <span id="chat-arrow">▶</span> 🤖 AI 扑克教练
+            </div>
+            <div class="chat-content" id="chat-content" style="display:none;">
+                <div class="chat-desc">有任何问题都可以问教练，比如资金管理、起手牌策略、赔率计算等</div>
+                
+                <div class="chat-messages" id="chat-messages">
+                    <div class="chat-message coach">
+                        <div class="chat-bubble coach">你好！我是你的扑克教练。有什么可以帮你的吗？可以问我关于资金管理、翻前策略、赔率计算、听牌技巧等问题。</div>
+                    </div>
+                </div>
+                
+                <div class="chat-input-area">
+                    <input type="text" class="chat-input" id="chat-input" placeholder="输入问题..." onkeydown="if(event.key==='Enter')sendChatMessage()">
+                    <button class="btn btn-primary chat-send-btn" onclick="sendChatMessage()">发送</button>
+                </div>
+                
+                <div class="chat-suggestions">
+                    <button class="chat-suggestion-btn" onclick="sendSuggestion('资金只有20个买入，我该用什么策略？')">20买入策略</button>
+                    <button class="chat-suggestion-btn" onclick="sendSuggestion('翻前矩阵里的颜色是什么意思？')">翻前矩阵</button>
+                    <button class="chat-suggestion-btn" onclick="sendSuggestion('Kelly公式在实战中怎么用？')">Kelly公式</button>
+                    <button class="chat-suggestion-btn" onclick="sendSuggestion('如何降低破产风险？')">破产风险</button>
+                </div>
+            </div>
+        </div>
+
         <footer>
             <p>仅供学习娱乐使用 · 请理性游戏</p>
         </footer>
     </div>
 
-    <!-- PWA 安装提示条 -->
-    <div class="pwa-install-banner" id="pwa-banner">
-        <span>添加到主屏幕，像App一样使用</span>
-        <button class="btn btn-primary" id="pwa-install-btn" onclick="installPWA()" style="padding:8px 20px;font-size:0.85em;min-height:auto;">安装</button>
-        <button class="btn btn-secondary" onclick="dismissPWA()" style="padding:8px 14px;font-size:0.85em;min-height:auto;">✕</button>
+    <!-- PWA 安装提示弹窗 -->
+    <div class="pwa-install-modal" id="pwa-modal" style="display:none;">
+        <div class="pwa-modal-overlay" onclick="dismissPWA()"></div>
+        <div class="pwa-modal-content">
+            <div class="pwa-modal-header">
+                <h3>📱 安装到手机桌面</h3>
+                <button class="pwa-modal-close" onclick="dismissPWA()">✕</button>
+            </div>
+            <div class="pwa-modal-body" id="pwa-modal-body">
+                <!-- 动态内容 -->
+            </div>
+            <div class="pwa-modal-footer">
+                <button class="btn btn-secondary" onclick="dismissPWA()">暂不安装</button>
+            </div>
+        </div>
     </div>
 
     <script src="js/poker-engine.js"></script>
@@ -172,14 +241,113 @@
             });
         }
         
+        // 检测设备类型
+        function detectDevice() {
+            const ua = navigator.userAgent.toLowerCase();
+            if (/iphone|ipad|ipod/.test(ua)) return 'ios';
+            if (/android/.test(ua)) return 'android';
+            if (/macintosh|mac os/.test(ua)) return 'mac';
+            if (/windows/.test(ua)) return 'windows';
+            return 'other';
+        }
+        
+        // 获取安装提示内容
+        function getInstallGuide(device) {
+            const guides = {
+                ios: `
+                    <div class="pwa-guide-step">
+                        <div class="pwa-guide-num">1</div>
+                        <div class="pwa-guide-text">点击 Safari 底部中间的 <strong>分享按钮</strong> ⬆️</div>
+                    </div>
+                    <div class="pwa-guide-step">
+                        <div class="pwa-guide-num">2</div>
+                        <div class="pwa-guide-text">在菜单中找到并点击「<strong>添加到主屏幕</strong>」</div>
+                    </div>
+                    <div class="pwa-guide-step">
+                        <div class="pwa-guide-num">3</div>
+                        <div class="pwa-guide-text">点击右上角「添加」，桌面即出现 ♠ 图标</div>
+                    </div>
+                `,
+                android: `
+                    <div class="pwa-guide-step">
+                        <div class="pwa-guide-num">1</div>
+                        <div class="pwa-guide-text">点击 Chrome 右上角 <strong>菜单 ⋮</strong></div>
+                    </div>
+                    <div class="pwa-guide-step">
+                        <div class="pwa-guide-num">2</div>
+                        <div class="pwa-guide-text">选择「<strong>添加到主屏幕</strong>」或「安装应用」</div>
+                    </div>
+                    <div class="pwa-guide-step">
+                        <div class="pwa-guide-num">3</div>
+                        <div class="pwa-guide-text">点击「安装」，桌面即出现图标</div>
+                    </div>
+                `,
+                mac: `
+                    <div class="pwa-guide-step">
+                        <div class="pwa-guide-num">1</div>
+                        <div class="pwa-guide-text">点击浏览器地址栏右侧的 <strong>安装图标</strong></div>
+                    </div>
+                    <div class="pwa-guide-step">
+                        <div class="pwa-guide-num">2</div>
+                        <div class="pwa-guide-text">或按 <strong>Command+Shift+A</strong> 打开应用安装</div>
+                    </div>
+                `,
+                windows: `
+                    <div class="pwa-guide-step">
+                        <div class="pwa-guide-num">1</div>
+                        <div class="pwa-guide-text">点击浏览器地址栏右侧的 <strong>安装图标</strong></div>
+                    </div>
+                    <div class="pwa-guide-step">
+                        <div class="pwa-guide-num">2</div>
+                        <div class="pwa-guide-text">或点击菜单 → 应用 → 安装此站点</div>
+                    </div>
+                `,
+                other: `
+                    <div class="pwa-guide-step">
+                        <div class="pwa-guide-num">1</div>
+                        <div class="pwa-guide-text">在浏览器菜单中查找「<strong>安装</strong>」或「<strong>添加到主屏幕</strong>」</div>
+                    </div>
+                    <div class="pwa-guide-step">
+                        <div class="pwa-guide-num">2</div>
+                        <div class="pwa-guide-text">不同浏览器操作略有不同，一般在分享或菜单中</div>
+                    </div>
+                `
+            };
+            return guides[device] || guides.other;
+        }
+        
+        // 检查是否已 dismiss（7天内不重复提示）
+        function isPWARecentlyDismissed() {
+            const dismissedAt = localStorage.getItem('pwa-dismissed-at');
+            if (!dismissedAt) return false;
+            const days = (Date.now() - parseInt(dismissedAt)) / (1000 * 60 * 60 * 24);
+            return days < 7;
+        }
+        
+        function showPWAModal() {
+            if (isPWARecentlyDismissed()) return;
+            
+            const device = detectDevice();
+            const body = document.getElementById('pwa-modal-body');
+            body.innerHTML = `
+                <p style="margin-bottom:12px;color:var(--text-secondary);font-size:0.85rem;">
+                    安装后无需联网，随时随地学习扑克策略
+                </p>
+                <div class="pwa-guide-container">
+                    ${getInstallGuide(device)}
+                </div>
+                <p style="margin-top:12px;color:var(--text-muted);font-size:0.75rem;">
+                    💡 已安装？刷新页面即可离线使用全部功能
+                </p>
+            `;
+            document.getElementById('pwa-modal').style.display = 'block';
+        }
+        
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
             setTimeout(() => {
-                const banner = document.getElementById('pwa-banner');
-                if (banner && !localStorage.getItem('pwa-dismissed')) {
-                    banner.classList.add('show');
-                }
+                showPWAModal();
             }, 3000);
         });
         
@@ -191,21 +359,30 @@
                         console.log('用户接受了PWA安装');
                     }
                     deferredPrompt = null;
-                    document.getElementById('pwa-banner').classList.remove('show');
+                    document.getElementById('pwa-modal').style.display = 'none';
                 });
             } else {
-                alert('iOS用户：请点击 Safari 底部分享按钮，然后选择「添加到主屏幕」');
+                showPWAModal();
             }
         }
         
         function dismissPWA() {
-            document.getElementById('pwa-banner').classList.remove('show');
-            localStorage.setItem('pwa-dismissed', 'true');
+            document.getElementById('pwa-modal').style.display = 'none';
+            localStorage.setItem('pwa-dismissed-at', Date.now().toString());
         }
         
         if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true) {
             document.body.classList.add('standalone');
         }
+        
+        // 页面加载后主动展示安装提示（如果不是已安装状态）
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                if (!window.matchMedia('(display-mode: standalone)').matches && !navigator.standalone) {
+                    showPWAModal();
+                }
+            }, 5000);
+        });
 
         // ============ 核心逻辑 ============
         let holeCards = [];
@@ -669,6 +846,139 @@
             `;
             
             resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function getStageName() {
+            const c = communityCards.length;
+            if (c === 0) return 'Pre-flop（翻牌前）';
+            if (c === 3) return 'Flop（翻牌圈）';
+            if (c === 4) return 'Turn（转牌圈）';
+            if (c === 5) return 'River（河牌圈）';
+            return '未知阶段';
+        }
+
+        // ============ 翻前矩阵 UI 逻辑 ============
+        
+        let currentMatrixPosition = 'UTG';
+        
+        function toggleMatrix() {
+            const content = document.getElementById('matrix-content');
+            const arrow = document.getElementById('matrix-arrow');
+            const isHidden = content.style.display === 'none';
+            content.style.display = isHidden ? 'block' : 'none';
+            arrow.textContent = isHidden ? '▼' : '▶';
+            if (isHidden && !document.getElementById('matrix-grid').children.length) {
+                renderMatrix();
+            }
+        }
+        
+        function selectMatrixPosition(pos) {
+            currentMatrixPosition = pos;
+            document.querySelectorAll('.matrix-pos-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.pos === pos);
+            });
+            renderMatrix();
+        }
+        
+        function renderMatrix() {
+            const grid = document.getElementById('matrix-grid');
+            const info = document.getElementById('matrix-info');
+            const result = getPreflopMatrix(currentMatrixPosition);
+            
+            grid.innerHTML = '';
+            
+            // 创建标题行
+            const headerRow = document.createElement('div');
+            headerRow.className = 'matrix-row';
+            headerRow.innerHTML = '<div class="matrix-cell matrix-header"></div>' + 
+                RANKS_MATRIX.map(r => `<div class="matrix-cell matrix-header">${r}</div>`).join('');
+            grid.appendChild(headerRow);
+            
+            // 创建数据行
+            for (let i = 0; i < 13; i++) {
+                const row = document.createElement('div');
+                row.className = 'matrix-row';
+                
+                // 行标题
+                const rowHeader = document.createElement('div');
+                rowHeader.className = 'matrix-cell matrix-header';
+                rowHeader.textContent = RANKS_MATRIX[i];
+                row.appendChild(rowHeader);
+                
+                for (let j = 0; j < 13; j++) {
+                    const cellData = result.matrix[i][j];
+                    const cell = document.createElement('div');
+                    cell.className = 'matrix-cell';
+                    cell.style.backgroundColor = cellData.bg;
+                    cell.style.color = cellData.color;
+                    cell.textContent = cellData.hand;
+                    cell.dataset.hand = cellData.hand;
+                    cell.dataset.action = cellData.action;
+                    cell.dataset.desc = cellData.desc;
+                    cell.onclick = () => showMatrixCellInfo(cellData);
+                    row.appendChild(cell);
+                }
+                
+                grid.appendChild(row);
+            }
+            
+            info.innerHTML = `<div class="matrix-info-text">当前位置: <strong>${result.positionName}</strong> · 点击格子查看策略</div>`;
+        }
+        
+        function showMatrixCellInfo(cellData) {
+            const info = document.getElementById('matrix-info');
+            info.innerHTML = `
+                <div class="matrix-info-detail">
+                    <div class="matrix-info-hand" style="color:${cellData.color}">${cellData.hand}</div>
+                    <div class="matrix-info-action">${cellData.text}</div>
+                    <div class="matrix-info-desc">${cellData.desc}</div>
+                </div>
+            `;
+        }
+
+        // ============ AI 教练聊天 UI 逻辑 ============
+        
+        function toggleChat() {
+            const content = document.getElementById('chat-content');
+            const arrow = document.getElementById('chat-arrow');
+            const isHidden = content.style.display === 'none';
+            content.style.display = isHidden ? 'block' : 'none';
+            arrow.textContent = isHidden ? '▼' : '▶';
+        }
+        
+        function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            if (!message) return;
+            
+            addChatMessage(message, 'user');
+            input.value = '';
+            
+            // 模拟AI思考延迟
+            setTimeout(() => {
+                const response = getAICoachResponse(message);
+                addChatMessage(response, 'coach');
+            }, 600 + Math.random() * 400);
+        }
+        
+        function sendSuggestion(text) {
+            document.getElementById('chat-input').value = text;
+            sendChatMessage();
+        }
+        
+        function addChatMessage(text, sender) {
+            const container = document.getElementById('chat-messages');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'chat-message ' + sender;
+            msgDiv.innerHTML = `<div class="chat-bubble ${sender}">${escapeHtml(text).replace(/\n/g, '<br>')}</div>`;
+            container.appendChild(msgDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
         init();

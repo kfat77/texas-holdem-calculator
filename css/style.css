@@ -530,7 +530,119 @@ footer {
     letter-spacing: 0.02em;
 }
 
-/* ========== PWA 安装提示 ========== */
+/* ========== PWA 安装提示弹窗 ========== */
+.pwa-install-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.pwa-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+}
+
+.pwa-modal-content {
+    position: relative;
+    background: linear-gradient(135deg, #1a472a, #0d3320);
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(255,215,0,0.2);
+    max-width: 420px;
+    width: 100%;
+    padding: 24px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    animation: fadeIn 0.3s ease;
+    z-index: 1;
+}
+
+.pwa-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.pwa-modal-header h3 {
+    font-size: 1.1rem;
+    color: #ffd700;
+    font-weight: 700;
+}
+
+.pwa-modal-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+}
+
+.pwa-modal-body {
+    margin-bottom: 16px;
+}
+
+.pwa-guide-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.pwa-guide-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.pwa-guide-num {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(255,215,0,0.2);
+    color: #ffd700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.pwa-guide-text {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.pwa-guide-text strong {
+    color: #ffd700;
+    font-weight: 600;
+}
+
+.pwa-modal-footer {
+    text-align: center;
+}
+
+.pwa-modal-footer .btn {
+    padding: 8px 24px;
+    font-size: 0.85rem;
+    min-height: auto;
+}
+
+/* 旧的PWA横幅样式（保留兼容） */
 .pwa-install-banner {
     display: none;
     position: fixed;
@@ -907,5 +1019,346 @@ footer {
     *, *::before, *::after {
         animation-duration: 0.01ms !important;
         transition-duration: 0.01ms !important;
+    }
+}
+
+/* ========== 翻前矩阵 ========== */
+.matrix-section {
+    border: 1px solid rgba(255,215,0,0.15);
+}
+
+.matrix-section .section-title {
+    margin-bottom: 0;
+    transition: opacity 0.2s ease;
+}
+
+.matrix-section .section-title:hover {
+    opacity: 0.85;
+}
+
+.matrix-content {
+    margin-top: 16px;
+    animation: fadeIn 0.3s ease;
+}
+
+.matrix-desc {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+    text-align: center;
+}
+
+.matrix-positions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 14px;
+}
+
+.matrix-pos-btn {
+    padding: 6px 14px;
+    border-radius: var(--radius-full);
+    border: 1.5px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.04);
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+}
+
+.matrix-pos-btn:hover {
+    border-color: rgba(255,215,0,0.4);
+    color: #ffd700;
+}
+
+.matrix-pos-btn.active {
+    background: #ffd700;
+    border-color: #ffd700;
+    color: #1a472a;
+    box-shadow: 0 0 12px rgba(255,215,0,0.3);
+}
+
+.matrix-legend {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-bottom: 14px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.matrix-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.matrix-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.matrix-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 14px;
+    overflow-x: auto;
+    padding: 4px;
+    background: rgba(0,0,0,0.15);
+    border-radius: var(--radius-sm);
+}
+
+.matrix-row {
+    display: flex;
+    gap: 2px;
+}
+
+.matrix-cell {
+    width: clamp(36px, 6vw, 48px);
+    height: clamp(36px, 6vw, 48px);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    user-select: none;
+    -webkit-user-select: none;
+    flex-shrink: 0;
+}
+
+.matrix-cell:hover {
+    transform: scale(1.12);
+    box-shadow: 0 0 8px rgba(255,255,255,0.2);
+    z-index: 1;
+}
+
+.matrix-cell.matrix-header {
+    background: rgba(255,255,255,0.08);
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    cursor: default;
+}
+
+.matrix-cell.matrix-header:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.matrix-info {
+    background: rgba(0,0,0,0.15);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    text-align: center;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.matrix-info-text {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.matrix-info-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: center;
+}
+
+.matrix-info-hand {
+    font-size: 1.3rem;
+    font-weight: 700;
+}
+
+.matrix-info-action {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.matrix-info-desc {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* ========== AI 教练聊天 ========== */
+.chat-section {
+    border: 1px solid rgba(59,130,246,0.15);
+}
+
+.chat-section .section-title {
+    margin-bottom: 0;
+    transition: opacity 0.2s ease;
+}
+
+.chat-section .section-title:hover {
+    opacity: 0.85;
+}
+
+.chat-content {
+    margin-top: 16px;
+    animation: fadeIn 0.3s ease;
+}
+
+.chat-desc {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+    text-align: center;
+}
+
+.chat-messages {
+    background: rgba(0,0,0,0.15);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    max-height: 320px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.chat-message {
+    display: flex;
+}
+
+.chat-message.coach {
+    justify-content: flex-start;
+}
+
+.chat-message.user {
+    justify-content: flex-end;
+}
+
+.chat-bubble {
+    max-width: 85%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.chat-bubble.coach {
+    background: rgba(255,255,255,0.08);
+    color: var(--text-secondary);
+    border-bottom-left-radius: 4px;
+}
+
+.chat-bubble.user {
+    background: #ffd700;
+    color: #1a472a;
+    border-bottom-right-radius: 4px;
+    font-weight: 500;
+}
+
+.chat-input-area {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.chat-input {
+    flex: 1;
+    padding: 10px 14px;
+    border-radius: var(--radius-full);
+    border: 1.5px solid rgba(255,255,255,0.15);
+    background: rgba(0,0,0,0.25);
+    color: #fff;
+    font-size: 0.9rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s ease;
+    -webkit-appearance: none;
+}
+
+.chat-input:focus {
+    border-color: rgba(255,215,0,0.5);
+}
+
+.chat-input::placeholder {
+    color: rgba(255,255,255,0.25);
+}
+
+.chat-send-btn {
+    padding: 10px 20px;
+    min-height: auto;
+    font-size: 0.85rem;
+}
+
+.chat-suggestions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.chat-suggestion-btn {
+    padding: 6px 14px;
+    border-radius: var(--radius-full);
+    border: 1.5px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.04);
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+}
+
+.chat-suggestion-btn:hover {
+    background: rgba(255,215,0,0.12);
+    border-color: rgba(255,215,0,0.3);
+    color: #ffd700;
+}
+
+/* 矩阵响应式 */
+@media (max-width: 600px) {
+    .matrix-cell {
+        width: 32px;
+        height: 32px;
+        font-size: 0.55rem;
+    }
+    
+    .matrix-pos-btn {
+        padding: 5px 10px;
+        font-size: 0.7rem;
+    }
+    
+    .matrix-legend {
+        gap: 10px;
+        font-size: 0.7rem;
+    }
+    
+    .chat-bubble {
+        max-width: 90%;
+        font-size: 0.8rem;
+    }
+    
+    .chat-suggestions {
+        gap: 6px;
+    }
+    
+    .chat-suggestion-btn {
+        padding: 5px 10px;
+        font-size: 0.7rem;
     }
 }
