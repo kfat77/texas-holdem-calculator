@@ -109,6 +109,44 @@
             <div class="probability-list" id="probability-list"></div>
         </div>
 
+        <!-- 资金管理建议 -->
+        <div class="section brm-section" id="brm-area">
+            <div class="section-title" onclick="toggleBRM()" style="cursor:pointer;user-select:none;">
+                <span id="brm-arrow">▶</span> 💰 资金管理建议
+            </div>
+            <div class="brm-content" id="brm-content" style="display:none;">
+                <div class="brm-desc">基于 BRM · Kelly · RoR · EV 理论的综合行动建议</div>
+                
+                <div class="brm-inputs" id="brm-inputs">
+                    <div class="brm-input-row">
+                        <div class="brm-input-group">
+                            <label>💵 当前资金</label>
+                            <input type="number" id="brm-bankroll" placeholder="例如: 2000" min="0" step="1">
+                        </div>
+                        <div class="brm-input-group">
+                            <label>🎫 买入金额</label>
+                            <input type="number" id="brm-buyin" placeholder="例如: 100" min="1" step="1">
+                        </div>
+                    </div>
+                    <div class="brm-input-row">
+                        <div class="brm-input-group">
+                            <label>🏦 当前底池</label>
+                            <input type="number" id="brm-pot" placeholder="例如: 150" min="0" step="1">
+                        </div>
+                        <div class="brm-input-group">
+                            <label>📥 需跟注</label>
+                            <input type="number" id="brm-tocall" placeholder="例如: 50" min="0" step="1">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" id="brm-calc-btn" onclick="calculateBRM()" style="width:100%;margin-top:8px;">
+                        获取资金行动建议
+                    </button>
+                </div>
+                
+                <div class="brm-results" id="brm-results"></div>
+            </div>
+        </div>
+
         <footer>
             <p>仅供学习娱乐使用 · 请理性游戏</p>
         </footer>
@@ -173,7 +211,7 @@
         let holeCards = [];
         let communityCards = [];
         let selectedSuit = '♠';
-        let cardHistory = []; // 记录添加顺序，用于撤销
+        let cardHistory = [];
         const RANKS_ORDER = ['A', 'K', 'Q', 'J', '10', '9', '8', '7', '6', '5', '4', '3', '2'];
 
         function init() {
@@ -210,15 +248,12 @@
             const inCommunity = communityCards.find(c => c.toString() === cardStr);
             
             if (inHole) {
-                // 取消选择（从手牌中移除）
                 holeCards = holeCards.filter(c => c.toString() !== cardStr);
                 cardHistory = cardHistory.filter(h => h !== cardStr);
             } else if (inCommunity) {
-                // 取消选择（从公共牌中移除）
                 communityCards = communityCards.filter(c => c.toString() !== cardStr);
                 cardHistory = cardHistory.filter(h => h !== cardStr);
             } else {
-                // 添加新牌
                 if (holeCards.length < 2) {
                     holeCards.push(card);
                     cardHistory.push(cardStr);
@@ -231,13 +266,10 @@
             updateUI();
         }
 
-        // 撤销上一张
         function undoLastCard() {
             if (cardHistory.length === 0) return;
             
             const lastCardStr = cardHistory[cardHistory.length - 1];
-            
-            // 从手牌或公共牌中移除
             const inHole = holeCards.find(c => c.toString() === lastCardStr);
             if (inHole) {
                 holeCards = holeCards.filter(c => c.toString() !== lastCardStr);
@@ -245,9 +277,7 @@
                 communityCards = communityCards.filter(c => c.toString() !== lastCardStr);
             }
             
-            // 从历史记录中移除
             cardHistory.pop();
-            
             updateUI();
         }
 
@@ -275,6 +305,9 @@
             cardHistory = [];
             document.getElementById('result-area').classList.remove('visible');
             document.getElementById('progress-area').classList.remove('visible');
+            document.getElementById('brm-results').innerHTML = '';
+            document.getElementById('brm-arrow').textContent = '▶';
+            document.getElementById('brm-content').style.display = 'none';
             updateUI();
         }
 
@@ -317,13 +350,11 @@
             });
         }
 
-        // 更新阶段指示器 - 动态显示当前状态
         function updateStageIndicator() {
             const stages = ['preflop', 'flop', 'turn', 'river'];
             const cc = communityCards.length;
             const hc = holeCards.length;
             
-            // 清除所有active
             stages.forEach(s => {
                 document.getElementById('stage-' + s).classList.remove('active');
             });
@@ -332,7 +363,6 @@
             let stageText = 'Pre-flop';
             
             if (cc === 0) {
-                // 翻牌前阶段
                 activeStage = 'preflop';
                 if (hc < 2) {
                     stageText = `Pre-flop · 还需${2 - hc}张手牌`;
@@ -340,7 +370,6 @@
                     stageText = 'Pre-flop · 翻牌前';
                 }
             } else if (cc < 3) {
-                // 还在翻牌前阶段，等待翻牌（3张公共牌）
                 activeStage = 'preflop';
                 stageText = `Pre-flop · 还需${3 - cc}张翻牌`;
             } else if (cc === 3) {
@@ -358,7 +387,6 @@
             activeEl.classList.add('active');
             activeEl.textContent = stageText;
             
-            // 恢复其他阶段的原始文本
             const originalTexts = { 'preflop': 'Pre-flop', 'flop': 'Flop', 'turn': 'Turn', 'river': 'River' };
             stages.forEach(s => {
                 if (s !== activeStage) {
@@ -399,7 +427,6 @@
             updateRankButtons();
             updateStageIndicator();
             
-            // 更新按钮状态
             document.getElementById('calc-btn').disabled = holeCards.length !== 2;
             document.getElementById('undo-btn').disabled = cardHistory.length === 0;
         }
@@ -500,6 +527,148 @@
             if (c === 4) return 'Turn（转牌圈）';
             if (c === 5) return 'River（河牌圈）';
             return '未知阶段';
+        }
+
+        // ============ 资金管理 UI 逻辑 ============
+        
+        let currentEquity = null;
+        
+        function toggleBRM() {
+            const content = document.getElementById('brm-content');
+            const arrow = document.getElementById('brm-arrow');
+            const isHidden = content.style.display === 'none';
+            content.style.display = isHidden ? 'block' : 'none';
+            arrow.textContent = isHidden ? '▼' : '▶';
+        }
+        
+        async function calculateBRM() {
+            if (holeCards.length !== 2) {
+                alert('请先选择2张手牌');
+                return;
+            }
+            
+            const bankroll = parseFloat(document.getElementById('brm-bankroll').value) || 0;
+            const buyIn = parseFloat(document.getElementById('brm-buyin').value) || 0;
+            const potSize = parseFloat(document.getElementById('brm-pot').value) || 0;
+            const toCall = parseFloat(document.getElementById('brm-tocall').value) || 0;
+            
+            if (bankroll <= 0 || buyIn <= 0) {
+                alert('请输入有效的资金和买入金额');
+                return;
+            }
+            
+            const btn = document.getElementById('brm-calc-btn');
+            const resultsDiv = document.getElementById('brm-results');
+            btn.disabled = true;
+            btn.textContent = '正在计算 Equity...';
+            resultsDiv.innerHTML = '<div class="brm-loading">正在模拟对手手牌计算胜率...</div>';
+            
+            // 让UI更新
+            await new Promise(r => setTimeout(r, 50));
+            
+            // 计算Equity（蒙特卡洛模拟）
+            const equity = calculateEquity(holeCards, communityCards, 5000);
+            currentEquity = equity;
+            
+            // 获取综合建议
+            const advice = getBankrollActionAdvice(equity, potSize, toCall, bankroll, buyIn);
+            
+            btn.disabled = false;
+            btn.textContent = '获取资金行动建议';
+            
+            renderBRMAdvice(advice);
+        }
+        
+        function renderBRMAdvice(advice) {
+            const resultsDiv = document.getElementById('brm-results');
+            
+            // 标签HTML
+            const tagsHtml = advice.tags.map(t => `<span class="brm-tag">${t}</span>`).join('');
+            
+            // 额外建议HTML
+            const extraHtml = advice.extraAdvice.map(e => `<div class="brm-tip">• ${e}</div>`).join('');
+            
+            // Kelly条
+            const kellyPct = Math.max(0, advice.kelly * 100);
+            const halfKellyPct = Math.max(0, advice.halfKelly * 100);
+            const quarterKellyPct = Math.max(0, advice.quarterKelly * 100);
+            
+            resultsDiv.innerHTML = `
+                <div class="brm-action-card" style="border-color:${advice.actionColor};background:${advice.actionBg}">
+                    <div class="brm-action-header">
+                        <div class="brm-action-title" style="color:${advice.actionColor}">${advice.action}</div>
+                        <div class="brm-action-confidence">置信度: ${advice.confidence}</div>
+                    </div>
+                    <div class="brm-action-reason">${advice.reasoning}</div>
+                    ${advice.betSize > 0 ? `<div class="brm-action-bet">建议下注: <strong>${advice.betSize}</strong></div>` : ''}
+                    <div class="brm-action-tags">${tagsHtml}</div>
+                </div>
+                
+                <div class="brm-metrics">
+                    <div class="brm-metric">
+                        <div class="brm-metric-label">胜率 (Equity)</div>
+                        <div class="brm-metric-value">${(advice.equity * 100).toFixed(1)}%</div>
+                    </div>
+                    <div class="brm-metric">
+                        <div class="brm-metric-label">底池赔率</div>
+                        <div class="brm-metric-value">${(advice.potOdds * 100).toFixed(1)}%</div>
+                    </div>
+                    <div class="brm-metric">
+                        <div class="brm-metric-label">期望值 EV</div>
+                        <div class="brm-metric-value" style="color:${advice.ev >= 0 ? '#4ade80' : '#ef4444'}">${advice.ev >= 0 ? '+' : ''}${advice.ev.toFixed(2)}</div>
+                    </div>
+                </div>
+                
+                <div class="brm-kelly-section">
+                    <div class="brm-section-subtitle">📐 Kelly 下注比例建议</div>
+                    <div class="brm-kelly-bar">
+                        <div class="brm-kelly-label">完整凯利</div>
+                        <div class="brm-kelly-track">
+                            <div class="brm-kelly-fill" style="width:${Math.min(kellyPct, 100)}%;background:#ef4444"></div>
+                        </div>
+                        <div class="brm-kelly-pct">${kellyPct.toFixed(1)}%</div>
+                    </div>
+                    <div class="brm-kelly-bar">
+                        <div class="brm-kelly-label">半凯利 ⭐</div>
+                        <div class="brm-kelly-track">
+                            <div class="brm-kelly-fill" style="width:${Math.min(halfKellyPct, 100)}%;background:#22c55e"></div>
+                        </div>
+                        <div class="brm-kelly-pct">${halfKellyPct.toFixed(1)}%</div>
+                    </div>
+                    <div class="brm-kelly-bar">
+                        <div class="brm-kelly-label">四分之一凯利</div>
+                        <div class="brm-kelly-track">
+                            <div class="brm-kelly-fill" style="width:${Math.min(quarterKellyPct, 100)}%;background:#3b82f6"></div>
+                        </div>
+                        <div class="brm-kelly-pct">${quarterKellyPct.toFixed(1)}%</div>
+                    </div>
+                </div>
+                
+                <div class="brm-brm-section">
+                    <div class="brm-section-subtitle">💼 资金管理状态</div>
+                    <div class="brm-brm-status" style="color:${advice.brm.color}">
+                        ${advice.brm.message} · ${advice.brm.buyIns} 买入
+                    </div>
+                    <div class="brm-brm-bar">
+                        <div class="brm-brm-fill" style="width:${Math.min(advice.brm.buyIns / 50 * 100, 100)}%;background:${advice.brm.color}"></div>
+                    </div>
+                </div>
+                
+                <div class="brm-risk-section">
+                    <div class="brm-section-subtitle">⚠️ 破产风险评估</div>
+                    <div class="brm-risk-value" style="color:${advice.riskOfRuin > 0.1 ? '#ef4444' : advice.riskOfRuin > 0.01 ? '#facc15' : '#4ade80'}">
+                        ${(advice.riskOfRuin * 100).toFixed(3)}%
+                    </div>
+                    <div class="brm-risk-label">当前级别破产概率</div>
+                </div>
+                
+                <div class="brm-tips">
+                    <div class="brm-section-subtitle">💡 补充建议</div>
+                    ${extraHtml}
+                </div>
+            `;
+            
+            resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
 
         init();

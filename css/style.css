@@ -593,3 +593,319 @@ footer {
         transition-duration: 0.01ms !important;
     }
 }
+
+/* ========== 资金管理建议 (BRM) ========== */
+.brm-section {
+    border: 1px solid rgba(255,215,0,0.15);
+}
+
+.brm-section .section-title {
+    margin-bottom: 0;
+    transition: opacity 0.2s ease;
+}
+
+.brm-section .section-title:hover {
+    opacity: 0.85;
+}
+
+.brm-content {
+    margin-top: 16px;
+    animation: fadeIn 0.3s ease;
+}
+
+.brm-desc {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    text-align: center;
+    letter-spacing: 0.02em;
+}
+
+/* 输入区 */
+.brm-inputs {
+    margin-bottom: 16px;
+}
+
+.brm-input-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.brm-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.brm-input-group label {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.brm-input-group input {
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid rgba(255,255,255,0.12);
+    background: rgba(0,0,0,0.25);
+    color: #fff;
+    font-size: 0.9rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s ease;
+    -webkit-appearance: none;
+}
+
+.brm-input-group input:focus {
+    border-color: rgba(255,215,0,0.5);
+}
+
+.brm-input-group input::placeholder {
+    color: rgba(255,255,255,0.25);
+}
+
+/* 行动建议卡片 */
+.brm-action-card {
+    border-radius: var(--radius-md);
+    border: 2px solid;
+    padding: 16px;
+    margin-bottom: 16px;
+    animation: fadeIn 0.4s ease;
+}
+
+.brm-action-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.brm-action-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.brm-action-confidence {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    background: rgba(0,0,0,0.2);
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+}
+
+.brm-action-reason {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 10px;
+}
+
+.brm-action-bet {
+    font-size: 0.9rem;
+    color: #ffd700;
+    margin-bottom: 10px;
+}
+
+.brm-action-bet strong {
+    font-size: 1.1rem;
+}
+
+.brm-action-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.brm-tag {
+    font-size: 0.7rem;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    background: rgba(255,255,255,0.08);
+    color: var(--text-muted);
+    border: 1px solid rgba(255,255,255,0.08);
+}
+
+/* 指标网格 */
+.brm-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.brm-metric {
+    background: rgba(0,0,0,0.2);
+    border-radius: var(--radius-sm);
+    padding: 12px 8px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.06);
+}
+
+.brm-metric-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+}
+
+.brm-metric-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #ffd700;
+}
+
+/* Kelly 区域 */
+.brm-kelly-section {
+    background: rgba(0,0,0,0.15);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    margin-bottom: 16px;
+}
+
+.brm-section-subtitle {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+}
+
+.brm-kelly-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.brm-kelly-label {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    width: 90px;
+    flex-shrink: 0;
+    text-align: right;
+}
+
+.brm-kelly-track {
+    flex: 1;
+    height: 10px;
+    background: rgba(0,0,0,0.3);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.brm-kelly-fill {
+    height: 100%;
+    border-radius: var(--radius-full);
+    transition: width 0.6s ease;
+    min-width: 2px;
+}
+
+.brm-kelly-pct {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    width: 50px;
+    flex-shrink: 0;
+    text-align: right;
+    font-weight: 600;
+}
+
+/* BRM 状态 */
+.brm-brm-section {
+    background: rgba(0,0,0,0.15);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    margin-bottom: 16px;
+}
+
+.brm-brm-status {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.brm-brm-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(0,0,0,0.3);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.brm-brm-fill {
+    height: 100%;
+    border-radius: var(--radius-full);
+    transition: width 0.6s ease;
+}
+
+/* 破产风险 */
+.brm-risk-section {
+    background: rgba(0,0,0,0.15);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+.brm-risk-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin: 6px 0;
+}
+
+.brm-risk-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* 补充建议 */
+.brm-tips {
+    background: rgba(0,0,0,0.15);
+    border-radius: var(--radius-md);
+    padding: 14px;
+}
+
+.brm-tip {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    padding: 5px 0;
+    line-height: 1.5;
+}
+
+/* 加载状态 */
+.brm-loading {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+/* BRM 响应式 */
+@media (max-width: 600px) {
+    .brm-input-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
+    .brm-metrics {
+        grid-template-columns: 1fr;
+    }
+    
+    .brm-kelly-label {
+        width: 70px;
+        font-size: 0.7rem;
+    }
+    
+    .brm-action-title {
+        font-size: 1.1rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}
