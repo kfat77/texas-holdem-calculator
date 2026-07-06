@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0d3320">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -11,13 +11,225 @@
     <meta name="format-detection" content="telephone=no">
     
     <title data-i18n="app.title">扑克概率计算器</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='24' fill='%230d3320'/%3E%3Ctext x='96' y='120' font-size='100' text-anchor='middle' fill='%23ffd700'%3E♠%3C/text%3E%3C/svg%3E">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='24' fill='%230a2618'/%3E%3Ctext x='96' y='120' font-size='100' text-anchor='middle' fill='%23c9a227' font-family='serif'%3E%26%23x2660;%3C/text%3E%3C/svg%3E">
+    <style>
+/* === OKLCH Deep Emerald Casino Design System === */
+:root {
+  --bg-base: oklch(18% 0.02 150); --bg-surface: oklch(26% 0.03 150); --bg-surface-hover: oklch(32% 0.04 150);
+  --bg-surface-raised: oklch(38% 0.05 150); --bg-inset: oklch(14% 0.015 150); --bg-inset-hover: oklch(17% 0.018 150);
+  --border-default: oklch(35% 0.03 150); --border-subtle: oklch(30% 0.025 150); --border-strong: oklch(45% 0.04 150);
+  --border-focus: oklch(62% 0.13 145); --primary: oklch(62% 0.13 145); --primary-hover: oklch(68% 0.14 145);
+  --primary-active: oklch(55% 0.12 145); --accent: oklch(76% 0.14 85); --accent-hover: oklch(82% 0.15 85);
+  --accent-dim: oklch(60% 0.09 85); --accent-glow: oklch(76% 0.14 85 / 0.35); --suit-red: oklch(55% 0.15 25);
+  --suit-black: oklch(25% 0.02 250); --success: oklch(65% 0.12 145); --warning: oklch(72% 0.11 85);
+  --danger: oklch(55% 0.15 25); --info: oklch(65% 0.10 240); --text-primary: oklch(96% 0.005 145);
+  --text-secondary: oklch(72% 0.015 145); --text-muted: oklch(52% 0.01 145); --text-on-primary: oklch(10% 0.01 145);
+  --text-on-accent: oklch(12% 0.02 85); --font-display: 'Playfair Display', 'Noto Serif SC', 'STSong', serif;
+  --font-body: 'Inter', 'PingFang SC', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Consolas', monospace; --text-xs: 0.75rem; --text-sm: 0.875rem;
+  --text-base: 1rem; --text-lg: 1.125rem; --text-xl: 1.25rem; --text-2xl: 1.5rem; --text-3xl: 2rem;
+  --text-4xl: 2.5rem; --text-5xl: 3.5rem; --leading-tight: 1.15; --leading-snug: 1.35; --leading-normal: 1.6;
+  --tracking-tight: -0.04em; --tracking-wide: 0.05em; --space-1: 4px; --space-2: 8px; --space-3: 12px;
+  --space-4: 16px; --space-5: 20px; --space-6: 24px; --space-8: 32px; --space-10: 40px; --radius-sm: 4px;
+  --radius-base: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-full: 9999px; --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.15);
+  --shadow-base: 0 1px 3px 0 rgba(0,0,0,0.2), 0 1px 2px -1px rgba(0,0,0,0.2); --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.25), 0 2px 4px -2px rgba(0,0,0,0.25);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.3), 0 4px 6px -4px rgba(0,0,0,0.3); --z-nav: 300; --z-modal: 500;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1); --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-text-size-adjust: 100%; -webkit-font-smoothing: antialiased; }
+body { font-family: var(--font-body); font-size: var(--text-base); line-height: var(--leading-normal); color: var(--text-primary); background: var(--bg-base); min-height: 100vh; min-height: 100dvh; overflow-x: hidden; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+::selection { background: oklch(62% 0.13 145 / 0.25); }
+
+.particles-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
+.particle { position: absolute; border-radius: 50%; background: rgba(255,215,0,0.12); pointer-events: none; }
+@keyframes pf1 { 0%,100%{transform:translate(0,0)scale(1);opacity:0.1} 25%{transform:translate(30px,-40px)scale(1.2);opacity:0.2} 50%{transform:translate(-20px,-60px)scale(0.8);opacity:0.15} }
+@keyframes pf2 { 0%,100%{transform:translate(0,0)scale(1);opacity:0.15} 33%{transform:translate(-50px,30px)scale(0.9);opacity:0.2} 66%{transform:translate(20px,-50px)scale(1.3);opacity:0.1} }
+.particle:nth-child(3n+1){animation:pf1 20s ease-in-out infinite} .particle:nth-child(3n+2){animation:pf2 25s ease-in-out infinite} .particle:nth-child(3n){animation:pf1 18s ease-in-out infinite reverse}
+
+.container { position: relative; z-index: 1; max-width: 960px; margin: 0 auto; padding: 0 16px 60px; }
+@media(min-width:768px){.container{padding:0 24px 60px}}
+
+.tab-nav { display: flex; gap: 4px; justify-content: center; margin-bottom: 24px; padding: 4px; background: var(--bg-surface); border-radius: var(--radius-md); max-width: 480px; margin-left: auto; margin-right: auto; border: 1px solid var(--border-subtle); }
+.tab-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px; border-radius: var(--radius-base); border: none; background: transparent; color: var(--text-muted); font-size: var(--text-xs); font-weight: 500; cursor: pointer; transition: all 0.2s var(--ease-out-quart); min-height: 56px; font-family: inherit; }
+.tab-btn:hover { color: var(--text-secondary); background: var(--bg-surface-hover); }
+.tab-btn.is-active { background: oklch(76% 0.14 85 / 0.12); color: var(--accent); font-weight: 600; }
+.tab-btn svg { width: 20px; height: 20px; opacity: 0.6; transition: opacity 0.2s; }
+.tab-btn.is-active svg { opacity: 1; stroke: var(--accent); }
+.tab-panel { display: none; animation: fadeIn 0.25s var(--ease-out-quart); }
+.tab-panel.is-active { display: block; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.hero-title { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.05em; perspective: 600px; font-family: var(--font-display); font-size: clamp(2rem, 6vw, 3.5rem); font-weight: 600; letter-spacing: var(--tracking-tight); line-height: var(--leading-tight); color: var(--text-primary); text-wrap: balance; text-align: center; }
+.hero-title .char { display: inline-block; opacity: 0; transform-origin: center bottom; }
+@keyframes heroReveal { 0%{opacity:0;filter:blur(8px);transform:translateY(12px) rotateX(-40deg)} 30%{opacity:0.5;filter:blur(4px)} 100%{opacity:1;filter:blur(0);transform:translateY(0) rotateX(0deg)} }
+.hero-title .char.is-revealed { animation: heroReveal 0.5s var(--ease-out-expo) forwards; }
+.hero-subtitle { font-size: var(--text-sm); color: var(--text-secondary); text-align: center; margin-top: 8px; opacity: 0; }
+.hero-subtitle.is-visible { animation: fadeIn 0.8s var(--ease-out-quart) 0.6s forwards; }
+
+.stage-indicator { display: flex; justify-content: center; gap: 24px; margin: 0 0 24px; }
+.stage-item { text-align: center; padding: 4px 0; color: var(--text-muted); font-size: var(--text-sm); font-weight: 500; position: relative; transition: all 0.3s ease; }
+.stage-item.active { color: var(--accent); font-weight: 700; }
+.stage-item.active::after { content: ''; position: absolute; bottom: -4px; left: 0; right: 0; height: 2px; background: var(--accent); border-radius: 1px; }
+
+.card-slots { display: flex; gap: 10px; min-height: 68px; padding: 12px; background: var(--bg-inset); border-radius: var(--radius-md); justify-content: center; align-items: center; border: 2px dashed var(--border-subtle); }
+.card-slot { width: 56px; height: 80px; border-radius: var(--radius-base); background: var(--bg-surface); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; cursor: pointer; transition: all 0.2s ease; border: 2px solid transparent; user-select: none; color: var(--text-muted); font-variant-emoji: text; -webkit-font-variant-emoji: text; }
+.card-slot:hover { border-color: var(--accent-dim); }
+.card-slot.filled { background: #fff; box-shadow: var(--shadow-base); font-weight: 600; font-family: var(--font-mono); font-size: var(--text-lg); }
+.card-slot.filled.red { color: var(--suit-red); } .card-slot.filled.black { color: var(--suit-black); }
+
+.suit-picker { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
+.suit-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 14px 6px; border-radius: var(--radius-md); border: 1.5px solid var(--border-default); background: var(--bg-surface); color: var(--text-primary); cursor: pointer; transition: all 0.2s var(--ease-out-quart); gap: 3px; font-family: inherit; min-height: 44px; }
+.suit-btn:hover { background: var(--bg-surface-hover); border-color: var(--border-strong); transform: translateY(-2px); }
+.suit-btn:active { transform: translateY(0) scale(0.95); }
+.suit-btn .suit-icon { font-size: 1.8rem; line-height: 1; font-variant-emoji: text; -webkit-font-variant-emoji: text; }
+.suit-btn[data-suit="♠"] .suit-icon, .suit-btn[data-suit="♣"] .suit-icon { color: var(--text-primary); }
+.suit-btn[data-suit="♥"] .suit-icon, .suit-btn[data-suit="♦"] .suit-icon { color: var(--suit-red); }
+.suit-btn .suit-name { font-size: var(--text-xs); color: var(--text-muted); font-weight: 500; }
+.suit-btn.active { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 16px var(--accent-glow); }
+.suit-btn.active .suit-icon { color: var(--text-on-accent) !important; } .suit-btn.active .suit-name { color: var(--text-on-accent); }
+
+.rank-picker { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+@media(min-width:600px){.rank-picker{grid-template-columns:repeat(13,1fr);gap:4px}}
+.rank-btn { aspect-ratio: 1; border-radius: var(--radius-base); border: 1.5px solid oklch(45% 0.03 150); background: var(--bg-surface); color: var(--text-primary); font-size: var(--text-base); font-weight: 600; cursor: pointer; transition: all 0.15s ease; display: flex; align-items: center; justify-content: center; user-select: none; font-family: inherit; padding: 0; min-height: 44px; }
+.rank-btn:hover { background: var(--bg-surface-hover); border-color: var(--border-strong); }
+.rank-btn:active { transform: scale(0.94); }
+.rank-btn.selected { background: var(--accent); color: var(--text-on-accent); border-color: var(--accent); box-shadow: 0 0 14px var(--accent-glow); font-weight: 700; }
+.rank-btn.other-suit { background: var(--bg-inset); border-color: var(--border-subtle); color: var(--text-muted); }
+.rank-btn.disabled { opacity: 0.2; cursor: not-allowed; pointer-events: none; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); padding: 12px 32px; border-radius: var(--radius-base); border: none; font-size: var(--text-sm); font-weight: 600; cursor: pointer; transition: all 0.25s var(--ease-out-quart); font-family: inherit; user-select: none; min-height: 44px; letter-spacing: 0.01em; }
+.btn:active { transform: scale(0.97); }
+.btn:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 2px; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+.btn-primary { background: var(--accent); color: var(--text-on-accent); box-shadow: 0 4px 15px var(--accent-glow); }
+.btn-primary:hover:not(:disabled) { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 6px 22px var(--accent-glow); }
+.btn-secondary { background: transparent; color: var(--text-primary); border: 1.5px solid var(--border-default); }
+.btn-secondary:hover { background: var(--bg-surface-hover); border-color: var(--border-strong); }
+.btn.is-loading { position: relative; color: transparent; pointer-events: none; }
+.btn.is-loading::after { content: ''; position: absolute; top: 50%; left: 50%; width: 18px; height: 18px; margin: -9px 0 0 -9px; border: 2px solid rgba(0,0,0,0.2); border-top-color: currentColor; border-radius: 50%; animation: spin 0.8s linear infinite; color: var(--bg-base); }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.progress-container { display: none; margin: 16px 0; text-align: center; }
+.progress-container.visible { display: block; }
+.progress-bar { width: 100%; height: 4px; background: var(--bg-inset); border-radius: 2px; overflow: hidden; margin: 10px 0; }
+.progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s ease; width: 0%; }
+.progress-fill.is-pulsing { animation: pulse 0.6s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+.progress-text { color: var(--accent); font-size: var(--text-sm); }
+
+.result-section { display: none; }
+.result-section.visible { display: block; animation: resultSlideUp 0.5s var(--ease-out-expo); }
+@keyframes resultSlideUp { 0%{opacity:0;transform:translateY(30px)scale(0.96)} 100%{opacity:1;transform:translateY(0)scale(1)} }
+.result-info { text-align: center; margin-bottom: 20px; color: var(--text-secondary); font-size: var(--text-sm); }
+.exact-badge { display: inline-block; padding: 4px 14px; border-radius: var(--radius-full); background: oklch(65% 0.12 145 / 0.15); color: var(--success); font-size: var(--text-xs); font-weight: 600; border: 1px solid oklch(65% 0.12 145 / 0.3); }
+.monte-badge { display: inline-block; padding: 4px 14px; border-radius: var(--radius-full); background: oklch(72% 0.11 85 / 0.15); color: var(--warning); font-size: var(--text-xs); font-weight: 600; border: 1px solid oklch(72% 0.11 85 / 0.3); }
+
+.probability-list { display: flex; flex-direction: column; gap: 10px; }
+.prob-item { opacity: 0; transform: translateX(-20px); transition: opacity 0.4s var(--ease-out-expo), transform 0.4s var(--ease-out-expo); }
+.prob-item.is-visible { opacity: 1; transform: translateX(0); }
+.prob-label { width: clamp(56px, 16vw, 90px); text-align: right; font-weight: 600; font-size: var(--text-sm); flex-shrink: 0; color: var(--text-secondary); }
+.prob-bar-container { flex: 1; height: 30px; background: var(--bg-inset); border-radius: var(--radius-full); overflow: hidden; position: relative; }
+.prob-bar { height: 100%; border-radius: var(--radius-full); display: flex; align-items: center; justify-content: flex-end; padding-right: 12px; font-weight: 600; font-size: var(--text-xs); min-width: 50px; white-space: nowrap; transform-origin: left center; transform: scaleX(0); transition: transform 0.6s var(--ease-out-quart); }
+.prob-bar.is-grown { transform: scaleX(1); }
+.prob-bar.high { background: var(--success); color: var(--bg-base); }
+.prob-bar.medium { background: var(--warning); color: var(--bg-base); }
+.prob-bar.low { background: var(--danger); color: var(--text-primary); }
+.prob-bar.very-low { background: var(--bg-surface); color: var(--text-muted); border: 1px solid var(--border-default); }
+
+.brm-input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.brm-input-group { display: flex; flex-direction: column; gap: 5px; }
+.brm-input-group label { font-size: var(--text-sm); color: var(--text-secondary); font-weight: 500; }
+.brm-input-group input { padding: 10px 12px; border-radius: var(--radius-base); border: 1.5px solid var(--border-default); background: var(--bg-inset); color: var(--text-primary); font-size: var(--text-sm); font-family: inherit; outline: none; transition: border-color 0.2s ease; -webkit-appearance: none; }
+.brm-input-group input:focus { border-color: var(--border-focus); }
+.brm-input-group input::placeholder { color: var(--text-muted); opacity: 0.5; }
+.brm-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+.brm-metric { background: var(--bg-inset); border-radius: var(--radius-base); padding: 12px 8px; text-align: center; border: 1px solid var(--border-subtle); }
+.brm-metric-label { font-size: var(--text-xs); color: var(--text-muted); margin-bottom: 4px; }
+.brm-metric-value { font-size: var(--text-lg); font-weight: 700; color: var(--accent); font-family: var(--font-mono); }
+@media(max-width:600px){.brm-input-row{grid-template-columns:1fr}.brm-metrics{grid-template-columns:1fr}}
+
+.matrix-positions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-bottom: 14px; }
+.matrix-pos-btn { padding: 6px 14px; border-radius: var(--radius-full); border: 1.5px solid var(--border-default); background: var(--bg-surface); color: var(--text-secondary); font-size: var(--text-xs); font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: inherit; }
+.matrix-pos-btn:hover { border-color: var(--accent-dim); color: var(--accent); }
+.matrix-pos-btn.active { background: var(--accent); border-color: var(--accent); color: var(--text-on-accent); box-shadow: 0 0 12px var(--accent-glow); }
+.matrix-legend { display: flex; gap: 16px; justify-content: center; margin-bottom: 14px; font-size: var(--text-xs); color: var(--text-muted); }
+.matrix-legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.matrix-grid { display: flex; flex-direction: column; gap: 2px; margin-bottom: 14px; overflow-x: auto; padding: 4px; background: var(--bg-inset); border-radius: var(--radius-base); }
+.matrix-row { display: flex; gap: 2px; }
+.matrix-cell { width: clamp(36px, 6vw, 48px); height: clamp(36px, 6vw, 48px); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 600; cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease; user-select: none; flex-shrink: 0; font-family: var(--font-mono); }
+.matrix-cell:hover { transform: scale(1.12); box-shadow: 0 0 8px rgba(255,255,255,0.1); z-index: 1; }
+.matrix-cell.matrix-header { background: var(--bg-surface); color: var(--text-muted); font-size: 0.7rem; cursor: default; }
+.matrix-info { background: var(--bg-inset); border-radius: var(--radius-base); padding: 12px; text-align: center; min-height: 50px; display: flex; align-items: center; justify-content: center; }
+
+.chat-messages { background: var(--bg-inset); border-radius: var(--radius-md); padding: 14px; max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+.chat-message { display: flex; max-width: 85%; }
+.chat-message.coach { justify-content: flex-start; }
+.chat-message.user { justify-content: flex-end; margin-left: auto; }
+.chat-bubble { max-width: 85%; padding: 10px 14px; border-radius: 14px; font-size: var(--text-sm); line-height: 1.5; word-break: break-word; }
+.chat-bubble.coach { background: var(--bg-surface); color: var(--text-secondary); border-bottom-left-radius: 4px; border-left: 3px solid var(--accent); }
+.chat-bubble.user { background: var(--primary); color: var(--text-on-primary); border-bottom-right-radius: 4px; }
+.chat-input-area { display: flex; gap: 8px; margin-bottom: 12px; }
+.chat-input { flex: 1; padding: 10px 14px; border-radius: var(--radius-full); border: 1.5px solid var(--border-default); background: var(--bg-inset); color: var(--text-primary); font-size: var(--text-base); font-family: inherit; outline: none; transition: border-color 0.2s ease; -webkit-appearance: none; }
+.chat-input:focus { border-color: var(--border-focus); }
+.chat-input::placeholder { color: var(--text-muted); opacity: 0.5; }
+.chat-send-btn { padding: 10px 20px; min-height: 44px; font-size: var(--text-sm); }
+.chat-suggestions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.chat-suggestion-btn { padding: 6px 14px; border-radius: var(--radius-full); border: 1.5px solid var(--border-default); background: var(--bg-surface); color: var(--text-secondary); font-size: var(--text-xs); font-weight: 500; cursor: pointer; transition: all 0.2s ease; font-family: inherit; }
+.chat-suggestion-btn:hover { background: oklch(76% 0.14 85 / 0.12); border-color: var(--accent-dim); color: var(--accent); }
+
+.pwa-install-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: var(--z-modal); align-items: center; justify-content: center; padding: 20px; }
+.pwa-install-modal.show { display: flex; }
+.pwa-modal-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); }
+.pwa-modal-content { position: relative; background: var(--bg-surface); border-radius: var(--radius-lg); border: 1px solid var(--border-default); max-width: 420px; width: 100%; padding: 24px; box-shadow: var(--shadow-lg); }
+.pwa-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.pwa-modal-header h3 { font-size: var(--text-lg); color: var(--accent); font-weight: 700; }
+.pwa-modal-close { background: none; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; padding: 4px; line-height: 1; }
+.pwa-guide-step { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+.pwa-guide-num { width: 24px; height: 24px; border-radius: 50%; background: oklch(76% 0.14 85 / 0.2); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: var(--text-xs); font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+.pwa-guide-text { font-size: var(--text-sm); color: var(--text-secondary); line-height: 1.5; }
+
+.lang-switcher { position: absolute; top: 12px; right: 12px; display: flex; gap: 4px; z-index: 10; }
+.lang-btn { padding: 5px 12px; border-radius: var(--radius-full); border: 1.5px solid var(--border-default); background: var(--bg-surface); color: var(--text-muted); font-size: var(--text-xs); font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: inherit; }
+.lang-btn:hover { border-color: var(--accent-dim); color: var(--accent); }
+.lang-btn.active { background: var(--accent); border-color: var(--accent); color: var(--text-on-accent); box-shadow: 0 0 10px var(--accent-glow); }
+@media(max-width:600px){.lang-switcher{top:8px;right:8px}}
+
+footer { text-align: center; padding: 28px 10px; color: var(--text-muted); font-size: var(--text-xs); letter-spacing: 0.02em; }
+
+@media(max-width:600px){
+  .container{padding:0 14px 40px}
+  .suit-btn{padding:12px 4px}
+  .suit-btn .suit-icon{font-size:1.6rem}
+  .rank-btn{min-height:40px;font-size:var(--text-base)}
+  .actions{flex-direction:column}
+  .btn{width:100%;max-width:100%}
+  .matrix-cell{width:32px;height:32px;font-size:0.55rem}
+  .chat-bubble{max-width:90%;font-size:var(--text-xs)}
+  .hero-title{font-size:clamp(1.8rem,8vw,2.5rem)}
+}
+@media(max-width:400px){
+  .suit-picker{gap:6px}
+  .suit-btn{border-radius:10px;padding:10px 2px}
+  .suit-btn .suit-name{font-size:0.65rem}
+  .rank-picker{gap:4px}
+  .rank-btn{border-radius:8px;font-size:0.9rem}
+}
+
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border-width:0}
+
+</style>
     <script src="js/i18n.js"></script>
 </head>
 <body>
+    <div class="particles-container" id="particles"></div>
     <div class="container">
         <!-- 语言切换器 -->
         <div class="lang-switcher" id="lang-switcher">
@@ -26,9 +238,30 @@
         </div>
 
         <header>
-            <h1 data-i18n="app.title">扑克概率计算器</h1>
-            <p data-i18n="app.subtitle">选花色 → 选数字，组合成牌计算概率</p>
+            <h1 class="hero-title" data-i18n="app.title">Poker Odds</h1>
+            <p class="hero-subtitle" data-i18n="app.subtitle">选花色 → 选数字，组合成牌计算概率</p>
+            
+            
         </header>
+    <!-- Tab Navigation -->
+    <nav class="tab-nav" aria-label="功能导航">
+      <button class="tab-btn is-active" data-tab="calculator" onclick="switchTab('calculator')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="10" height="14" rx="1.5"/><rect x="12" y="6" width="10" height="14" rx="1.5"/></svg>
+        <span>计算器</span>
+      </button>
+      <button class="tab-btn" data-tab="bankroll" onclick="switchTab('bankroll')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <span>资金</span>
+      </button>
+      <button class="tab-btn" data-tab="matrix" onclick="switchTab('matrix')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span>矩阵</span>
+      </button>
+      <button class="tab-btn" data-tab="coach" onclick="switchTab('coach')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>教练</span>
+      </button>
+    </nav>
 
         <!-- 阶段指示器 -->
         <div class="stage-indicator" id="stage-indicator">
@@ -38,9 +271,10 @@
             <div class="stage-item" id="stage-river" data-stage="5" data-i18n="stage.river">River</div>
         </div>
 
-        <!-- 已选牌展示 -->
+        <section id="tab-calculator" class="tab-panel is-active">
+<!-- 已选牌展示 -->
         <div class="section">
-            <div class="section-title" data-i18n="section.currentSelection">🃏 当前选择</div>
+            <div class="section-title" data-i18n="section.currentSelection">当前选择</div>
             <div class="selected-cards-area">
                 <div class="card-group">
                     <div class="card-group-label" data-i18n="section.holeCards">你的手牌 (2张)</div>
@@ -64,7 +298,7 @@
 
         <!-- 两步选牌区域 -->
         <div class="section">
-            <div class="section-title" data-i18n="section.selectCards">🎯 选择手牌</div>
+            <div class="section-title" data-i18n="section.selectCards">选择手牌</div>
             
             <div class="picker-hint" id="picker-hint">
                 <strong data-i18n="section.pickerHint">① 选一个花色 → ② 选一个数字</strong>
@@ -98,7 +332,7 @@
         <div class="section" style="text-align:center;">
             <div class="actions">
                 <button class="btn btn-primary" id="calc-btn" onclick="calculate()" disabled data-i18n="btn.calc">计算概率</button>
-                <button class="btn btn-secondary" id="undo-btn" onclick="undoLastCard()" disabled data-i18n="btn.undo">↩️ 撤销</button>
+                <button class="btn btn-secondary" id="undo-btn" onclick="undoLastCard()" disabled data-i18n="btn.undo">撤销</button>
                 <button class="btn btn-secondary" onclick="clearAll()" data-i18n="btn.clear">清除全部</button>
             </div>
         </div>
@@ -111,15 +345,17 @@
 
         <!-- 结果展示 -->
         <div class="section result-section" id="result-area">
-            <div class="section-title" data-i18n="section.probability">📊 概率分析</div>
+            <div class="section-title" data-i18n="section.probability">概率分析</div>
             <div class="result-info" id="result-info"></div>
             <div class="probability-list" id="probability-list"></div>
         </div>
 
-        <!-- 资金管理建议 -->
+        </section>
+<section id="tab-bankroll" class="tab-panel">
+<!-- 资金管理建议 -->
         <div class="section brm-section" id="brm-area">
             <div class="section-title" onclick="toggleBRM()" style="cursor:pointer;user-select:none;">
-                <span id="brm-arrow">▶</span> <span data-i18n="brm.title">💰 资金管理建议</span>
+                <span id="brm-arrow">▶</span> <span data-i18n="brm.title">资金管理建议</span>
             </div>
             <div class="brm-content" id="brm-content" style="display:none;">
                 <div class="brm-desc" data-i18n="brm.desc">基于 BRM · Kelly · RoR · EV 理论的综合行动建议</div>
@@ -127,21 +363,21 @@
                 <div class="brm-inputs" id="brm-inputs">
                     <div class="brm-input-row">
                         <div class="brm-input-group">
-                            <label data-i18n="brm.label.bankroll">💵 当前资金</label>
+                            <label data-i18n="brm.label.bankroll">当前资金</label>
                             <input type="number" id="brm-bankroll" placeholder="2000" min="0" step="1" data-i18n-placeholder="brm.placeholder.bankroll">
                         </div>
                         <div class="brm-input-group">
-                            <label data-i18n="brm.label.buyin">🎫 买入金额</label>
+                            <label data-i18n="brm.label.buyin">买入金额</label>
                             <input type="number" id="brm-buyin" placeholder="100" min="1" step="1">
                         </div>
                     </div>
                     <div class="brm-input-row">
                         <div class="brm-input-group">
-                            <label data-i18n="brm.label.pot">🏦 当前底池</label>
+                            <label data-i18n="brm.label.pot">当前底池</label>
                             <input type="number" id="brm-pot" placeholder="150" min="0" step="1">
                         </div>
                         <div class="brm-input-group">
-                            <label data-i18n="brm.label.tocall">📥 需跟注</label>
+                            <label data-i18n="brm.label.tocall">需跟注</label>
                             <input type="number" id="brm-tocall" placeholder="50" min="0" step="1">
                         </div>
                     </div>
@@ -154,10 +390,12 @@
             </div>
         </div>
 
-        <!-- 翻前矩阵 -->
+        </section>
+<section id="tab-matrix" class="tab-panel">
+<!-- 翻前矩阵 -->
         <div class="section matrix-section" id="matrix-area">
             <div class="section-title" onclick="toggleMatrix()" style="cursor:pointer;user-select:none;">
-                <span id="matrix-arrow">▶</span> <span data-i18n="matrix.title">🎯 13×13 翻前手牌矩阵</span>
+                <span id="matrix-arrow">▶</span> <span data-i18n="matrix.title">13×13 翻前手牌矩阵</span>
             </div>
             <div class="matrix-content" id="matrix-content" style="display:none;">
                 <div class="matrix-desc" data-i18n="matrix.desc">按位置查看169种起手牌的标准化范围</div>
@@ -185,10 +423,12 @@
             </div>
         </div>
 
-        <!-- AI 教练聊天 -->
+        </section>
+<section id="tab-coach" class="tab-panel">
+<!-- AI 教练聊天 -->
         <div class="section chat-section" id="chat-area">
             <div class="section-title" onclick="toggleChat()" style="cursor:pointer;user-select:none;">
-                <span id="chat-arrow">▶</span> <span data-i18n="chat.title">🤖 AI 扑克教练</span>
+                <span id="chat-arrow">▶</span> <span data-i18n="chat.title">AI 扑克教练</span>
             </div>
             <div class="chat-content" id="chat-content" style="display:none;">
                 <div class="chat-desc" data-i18n="chat.desc">有任何问题都可以问教练，比如资金管理、起手牌策略、赔率计算等</div>
@@ -213,7 +453,8 @@
             </div>
         </div>
 
-        <footer>
+        </section>
+<footer>
             <p data-i18n="app.footer">仅供学习娱乐使用 · 请理性游戏</p>
         </footer>
     </div>
@@ -223,7 +464,7 @@
         <div class="pwa-modal-overlay" onclick="dismissPWA()"></div>
         <div class="pwa-modal-content">
             <div class="pwa-modal-header">
-                <h3 data-i18n="pwa.title">📱 安装到手机桌面</h3>
+                <h3 data-i18n="pwa.title">安装到手机桌面</h3>
                 <button class="pwa-modal-close" onclick="dismissPWA()">✕</button>
             </div>
             <div class="pwa-modal-body" id="pwa-modal-body">
@@ -237,6 +478,137 @@
 
     <script src="js/poker-engine.js"></script>
     <script>
+
+        // ============ Tab Router ============
+        const TAB_NAMES = ['calculator', 'bankroll', 'matrix', 'coach'];
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('is-active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('is-active'));
+            document.querySelector('[data-tab="' + tabName + '"]').classList.add('is-active');
+            document.getElementById('tab-' + tabName).classList.add('is-active');
+            localStorage.setItem('lastTab', tabName);
+            if (tabName === 'matrix' && document.getElementById('matrix-grid').children.length === 0) renderMatrix();
+        }
+        function toggleBRM() { switchTab('bankroll'); }
+        function toggleMatrix() { switchTab('matrix'); if (document.getElementById('matrix-grid').children.length === 0) renderMatrix(); }
+        function toggleChat() { switchTab('coach'); }
+        
+        // ============ Hero Animation ============
+        function initHeroAnimation() {
+            const title = document.querySelector('.hero-title');
+            if (!title) return;
+            const text = title.textContent.trim();
+            title.innerHTML = '';
+            const shuffleChars = '♠♥♣♦AKQJ1098765432';
+            const chars = text.split('');
+            chars.forEach((char) => {
+                const span = document.createElement('span');
+                span.className = 'char';
+                span.textContent = char === ' ' ? ' ' : char;
+                title.appendChild(span);
+            });
+            const charSpans = title.querySelectorAll('.char');
+            charSpans.forEach((span, i) => {
+                setTimeout(() => {
+                    span.setAttribute('data-shuffle', shuffleChars[Math.floor(Math.random() * shuffleChars.length)]);
+                    span.classList.add('is-shuffling');
+                }, i * 50);
+                setTimeout(() => {
+                    span.classList.remove('is-shuffling');
+                    span.classList.add('is-revealed');
+                }, 150 + i * 50);
+            });
+            setTimeout(() => {
+                const sub = document.querySelector('.hero-subtitle');
+                if (sub) sub.classList.add('is-visible');
+            }, 400);
+        }
+        
+        // ============ Particles ============
+        function createParticles(count) {
+            const container = document.getElementById('particles');
+            if (!container) return;
+            for (let i = 0; i < count; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                const size = Math.random() * 3 + 2;
+                p.style.cssText = 'width:' + size + 'px;height:' + size + 'px;left:' + (Math.random() * 100) + '%;top:' + (Math.random() * 100) + '%;animation-delay:' + (Math.random() * -20) + 's;animation-duration:' + (15 + Math.random() * 15) + 's;';
+                container.appendChild(p);
+            }
+        }
+        
+        // ============ Animation Helpers ============
+        function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+        function animateCounter(el, start, end, duration) {
+            if (!el) return;
+            const startTime = performance.now(), range = end - start;
+            function update(t) {
+                const p = Math.min((t - startTime) / duration, 1);
+                const eased = p === 1 ? 1 : 1 - Math.pow(2, -10 * p);
+                el.textContent = (start + range * eased).toFixed(1) + '%';
+                if (p < 1) requestAnimationFrame(update);
+            }
+            requestAnimationFrame(update);
+        }
+        
+        // Override calculate with animation
+        const _origCalculate = calculate;
+        async function calculate() {
+            if (holeCards.length !== 2) return;
+            const btn = document.getElementById('calc-btn');
+            const progressArea = document.getElementById('progress-area');
+            const progressFill = document.getElementById('progress-fill');
+            const resultArea = document.getElementById('result-area');
+            btn.classList.add('is-loading'); btn.disabled = true;
+            progressArea.classList.add('visible');
+            resultArea.classList.remove('visible');
+            progressFill.style.width = '0%';
+            progressFill.classList.add('is-pulsing');
+            await delay(50); progressFill.style.width = '30%';
+            await delay(300); progressFill.style.width = '70%';
+            const result = calculateProbabilities(holeCards, communityCards);
+            await delay(300); progressFill.style.width = '100%';
+            progressFill.classList.remove('is-pulsing');
+            await delay(200);
+            btn.classList.remove('is-loading'); btn.disabled = false;
+            progressArea.classList.remove('visible');
+            showResultsAnimated(result);
+        }
+        
+        function showResultsAnimated(result) {
+            const resultArea = document.getElementById('result-area');
+            const resultInfo = document.getElementById('result-info');
+            const probList = document.getElementById('probability-list');
+            const methodText = result.exact ? t('method.exact') : t('method.monte');
+            const badgeClass = result.exact ? 'exact-badge' : 'monte-badge';
+            resultInfo.innerHTML = '<div style="margin-bottom:4px;">' + getStageName() + '</div><div><span class="' + badgeClass + '">' + methodText + '</span></div><div style="margin-top:6px;font-size:0.8rem;color:var(--text-muted);">' + t('comboCount', result.total.toLocaleString()) + '</div>';
+            probList.innerHTML = '';
+            const maxProb = result.top7[0].probability;
+            const items = result.top7.filter(item => item.probability > 0).map((item) => {
+                const wp = maxProb > 0 ? (item.probability / maxProb * 100) : 0;
+                let level = 'very-low';
+                if (item.probability > 20) level = 'high';
+                else if (item.probability > 5) level = 'medium';
+                else if (item.probability > 1) level = 'low';
+                const div = document.createElement('div');
+                div.className = 'prob-item';
+                div.innerHTML = '<div class="prob-label">' + item.name + '</div><div class="prob-bar-container"><div class="prob-bar ' + level + '" data-width="' + Math.max(wp, 8) + '">' + item.probability.toFixed(2) + '%</div></div>';
+                return div;
+            });
+            items.forEach(div => probList.appendChild(div));
+            resultArea.classList.add('visible');
+            items.forEach((div, i) => {
+                setTimeout(() => {
+                    div.classList.add('is-visible');
+                    const bar = div.querySelector('.prob-bar');
+                    setTimeout(() => bar.classList.add('is-grown'), 50);
+                }, i * 80);
+            });
+            setTimeout(() => { resultArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, items.length * 80 + 300);
+        }
+        // Override showResults
+        showResults = showResultsAnimated;
+
         // ============ PWA 支持 ============
         let deferredPrompt = null;
         
@@ -758,7 +1130,7 @@
                 </div>
                 
                 <div class="brm-kelly-section">
-                    <div class="brm-section-subtitle">📐 ${t('brm.kelly.full')} / ${t('brm.kelly.half')} / ${t('brm.kelly.quarter')}</div>
+                    <div class="brm-section-subtitle">${t('brm.kelly.full')} / ${t('brm.kelly.half')} / ${t('brm.kelly.quarter')}</div>
                     <div class="brm-kelly-bar">
                         <div class="brm-kelly-label">${t('brm.kelly.full')}</div>
                         <div class="brm-kelly-track">
@@ -954,7 +1326,12 @@
             }
         });
 
+        initHeroAnimation();
+        createParticles(15);
+        const lastTab = localStorage.getItem('lastTab');
+        if (lastTab && TAB_NAMES.includes(lastTab)) switchTab(lastTab);
         init();
+
     </script>
 </body>
 </html>
