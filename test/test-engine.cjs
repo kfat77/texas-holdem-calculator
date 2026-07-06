@@ -8,7 +8,7 @@ const path = require('path');
 const vm = require('vm');
 
 // 读取引擎文件并在当前上下文中执行
-const engineCode = fs.readFileSync(path.join(__dirname, '../js/poker-engine.js'), 'utf8');
+const engineCode = fs.readFileSync(path.join(__dirname, '../js/core-engine.js'), 'utf8');
 vm.runInThisContext(engineCode);
 
 // 确认引擎加载成功

@@ -3,12 +3,16 @@
  * 提供离线缓存支持，让App在无网络时也能使用
  */
 
-const CACHE_NAME = 'poker-calc-v1';
+const CACHE_NAME = 'poker-calc-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/css/style.css',
-  '/js/poker-engine.js',
+  '/js/core-engine.js',
+  '/js/brm-engine.js',
+  '/js/preflop-matrix.js',
+  '/js/ai-coach.js',
+  '/js/app.js',
   '/manifest.json'
 ];
 
