@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/kfat77/texas-holdem-calculator/main/assets/logo.svg" width="120" alt="♠ 德州扑克学习助手" onerror="this.style.display='none'">
+  <img src="https://raw.githubusercontent.com/kfat77/OPEN-poker/main/assets/logo.svg" width="120" alt="♠ 德州扑克学习助手" onerror="this.style.display='none'">
 </p>
 
 <h1 align="center">♠ 德州扑克学习助手 ♥</h1>
@@ -9,7 +9,13 @@
 </p>
 
 <p align="center">
-  <a href="https://kfat77.github.io/texas-holdem-calculator/">
+  <a href="https://github.com/kfat77/OPEN-poker/stargazers">
+    <img src="https://img.shields.io/github/stars/kfat77/OPEN-poker?style=for-the-badge&color=gold" alt="Stars">
+  </a>
+  <a href="https://github.com/kfat77/OPEN-poker/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/kfat77/OPEN-poker?style=for-the-badge&color=blue" alt="License">
+  </a>
+  <a href="https://kfat77.github.io/OPEN-poker/">
     <img src="https://img.shields.io/badge/🔗-在线体验-success?style=for-the-badge&logo=github" alt="在线体验">
   </a>
   <img src="https://img.shields.io/badge/📱-PWA支持-orange?style=for-the-badge" alt="PWA">
@@ -33,6 +39,17 @@
 
 ---
 
+## 📸 功能预览
+
+> 💡 **TODO**：请替换为实际截图或 GIF，展示以下场景：
+> 1. 可视化选牌界面
+> 2. 胜率计算结果展示
+> 3. 资金管理建议面板
+> 4. 13×13 翻前矩阵
+> 5. AI 教练对话界面
+
+---
+
 ## ✨ 功能亮点
 
 | 功能 | 说明 | 状态 |
@@ -47,7 +64,7 @@
 
 ## 🚀 在线体验
 
-👉 **[https://kfat77.github.io/texas-holdem-calculator/](https://kfat77.github.io/texas-holdem-calculator/)**
+👉 **[https://kfat77.github.io/OPEN-poker/](https://kfat77.github.io/OPEN-poker/)**
 
 - ✅ 电脑 / 手机 / 平板 浏览器直接打开
 - ✅ 无需下载，无需注册，无需后端
@@ -215,7 +232,7 @@
 ## 🛠️ 项目结构
 
 ```
-texas-holdem-calculator/
+OPEN-poker/
 ├── index.html              # 主页面（UI + 交互逻辑）
 ├── css/
 │   └── style.css           # 绿色赌桌风格 + Tesla极简布局
@@ -250,6 +267,19 @@ texas-holdem-calculator/
 4. **翻前矩阵**：169种起手牌 × 6个位置的标准化范围数据
 5. **Kelly Criterion**：f* = (bp − q) / b，支持完整/半/四分之一凯利
 6. **Risk of Ruin**：R = ((1−edge)/(1+edge))^buyIns
+
+---
+
+## 🗺️ 路线图 Roadmap
+
+| 阶段 | 功能 | 状态 |
+|:---:|:---|:---:|
+| ✅ v1.0 | 胜率计算器 + 资金管理 | 已完成 |
+| ✅ v1.5 | 13×13 翻前矩阵 + AI 教练 | 已完成 |
+| ✅ v2.0 | PWA 离线支持 + 响应式布局 | 已完成 |
+| 🔄 v2.5 | 多人对战模式（本地离线） | 计划中 |
+| ⏳ v3.0 | 牌局记录 + 统计分析 | 计划中 |
+| ⏳ v3.5 | 手牌历史导入（PokerTracker格式） | 计划中 |
 
 ---
 
