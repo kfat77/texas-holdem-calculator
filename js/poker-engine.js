@@ -1078,9 +1078,18 @@ function normalizeHandKey(handKey) {
 // Range 类：对手范围建模
 class Range {
     constructor(handKeys) {
+        // 兼容 index.html 中的 { type: 'preset', value: 'standard' } 调用方式
+        if (handKeys && typeof handKeys === 'object' && !Array.isArray(handKeys)) {
+            if (handKeys.type === 'preset') {
+                return Range.fromPreset(handKeys.value);
+            } else if (handKeys.type === 'matrix') {
+                return Range.fromMatrix(handKeys.value);
+            }
+        }
+        
         this.handKeys = [];
         this.combinations = [];
-        for (const key of handKeys) {
+        for (const key of handKeys || []) {
             const normKey = normalizeHandKey(key);
             if (HAND_COMBINATIONS[normKey]) {
                 this.handKeys.push(normKey);
@@ -1127,9 +1136,16 @@ class Range {
 }
 
 // 计算手牌 vs 对手范围的 Equity（蒙特卡洛）
+// 兼容传入单个 Range 或 Range 数组
 function calculateEquityVsRange(holeCards, opponentRange, communityCards = [], numSimulations = 20000) {
-    if (holeCards.length !== 2) return 0;
-    if (opponentRange.combinations.length === 0) return 1;
+    if (holeCards.length !== 2) return { equity: 0, winRate: 0, tieRate: 0 };
+    
+    // 如果传入数组，使用多对手计算
+    if (Array.isArray(opponentRange)) {
+        return calculateEquityVsMultipleRanges(holeCards, opponentRange, communityCards, numSimulations);
+    }
+    
+    if (!opponentRange || opponentRange.combinations.length === 0) return { equity: 1, winRate: 1, tieRate: 0 };
     
     const knownCards = [...holeCards, ...communityCards];
     const deck = removeCards(createDeck(), knownCards);
@@ -1145,7 +1161,7 @@ function calculateEquityVsRange(holeCards, opponentRange, communityCards = [], n
         return !combo.some(c => knownCards.some(k => k.toString() === c.toString()));
     });
     
-    if (availableOpponentCombos.length === 0) return 1;
+    if (availableOpponentCombos.length === 0) return { equity: 1, winRate: 1, tieRate: 0 };
     
     for (let i = 0; i < numSimulations; i++) {
         // 随机选择对手手牌
@@ -1173,7 +1189,12 @@ function calculateEquityVsRange(holeCards, opponentRange, communityCards = [], n
         else if (cmp === 0) ties++;
     }
     
-    return (wins + ties * 0.5) / numSimulations;
+    const equity = (wins + ties * 0.5) / numSimulations;
+    return {
+        equity: equity,
+        winRate: wins / numSimulations,
+        tieRate: ties / numSimulations
+    };
 }
 
 // 计算手牌 vs 多个对手范围的 Equity
@@ -1235,7 +1256,12 @@ function calculateEquityVsMultipleRanges(holeCards, opponentRanges, communityCar
         else if (cmp === 0) ties++;
     }
     
-    return (wins + ties * 0.5) / numSimulations;
+    const equity = (wins + ties * 0.5) / numSimulations;
+    return {
+        equity: equity,
+        winRate: wins / numSimulations,
+        tieRate: ties / numSimulations
+    };
 }
 
 // 获取手牌的标准化键（如 [A♠, K♥] -> 'AKo'）
@@ -1543,6 +1569,78 @@ function generateDailyChallenge() {
     };
 }
 
+// ============ UI 兼容函数 ============
+
+/**
+ * 获取全压/弃牌建议（兼容 index.html 和 daily-challenge.js）
+ * @param {string} position - 位置
+ * @param {number} stackDepth - 筹码深度
+ * @param {string} handKey - 手牌键如 'AKs'
+ * @returns {Object} { isInRange, rangeSet }
+ */
+function getPushFoldAdvice(position, stackDepth, handKey) {
+    const recommendation = getShortStackRecommendation(position, stackDepth, handKey);
+    const rangeHands = getShortStackRangeHands(position, stackDepth);
+    return {
+        isInRange: recommendation === 'P',
+        rangeSet: new Set(rangeHands)
+    };
+}
+
+/**
+ * 获取全压/弃牌矩阵（兼容 index.html）
+ * @param {string} position - 位置
+ * @param {number} stackDepth - 筹码深度
+ * @returns {Array} 13x13 矩阵，每个单元格 { hand, action, bg, color }
+ */
+function getPushFoldMatrix(position, stackDepth) {
+    const rangeHands = getShortStackRangeHands(position, stackDepth);
+    const rangeSet = new Set(rangeHands);
+    const matrix = [];
+    
+    for (let i = 0; i < 13; i++) {
+        const row = [];
+        for (let j = 0; j < 13; j++) {
+            let handKey;
+            if (i === j) {
+                handKey = RANKS_MATRIX[i] + RANKS_MATRIX[j];
+            } else if (i < j) {
+                handKey = RANKS_MATRIX[i] + RANKS_MATRIX[j] + 's';
+            } else {
+                handKey = RANKS_MATRIX[j] + RANKS_MATRIX[i] + 'o';
+            }
+            
+            const isInRange = rangeSet.has(handKey);
+            const action = isInRange ? 'P' : 'F';
+            const bg = isInRange ? '#22c55e' : '#ef4444';
+            
+            row.push({
+                hand: handKey,
+                action: action,
+                bg: bg,
+                color: '#fff'
+            });
+        }
+        matrix.push(row);
+    }
+    
+    return matrix;
+}
+
+/**
+ * 获取手牌显示名称（兼容 index.html）
+ * @param {string} handKey - 如 'AKs'
+ * @returns {string} 中文显示名
+ */
+function getHandDisplayName(handKey) {
+    const rankNames = { 'A': 'A', 'K': 'K', 'Q': 'Q', 'J': 'J', 'T': 'T', '9': '9', '8': '8', '7': '7', '6': '6', '5': '5', '4': '4', '3': '3', '2': '2' };
+    if (handKey.length === 2) {
+        return '口袋' + rankNames[handKey[0]] + rankNames[handKey[1]];
+    }
+    const type = handKey[2] === 's' ? '同花' : '非同花';
+    return rankNames[handKey[0]] + rankNames[handKey[1]] + ' ' + type;
+}
+
 // 导出/兼容模块（如果支持 module.exports）
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
@@ -1554,6 +1652,7 @@ if (typeof module !== 'undefined' && module.exports) {
         getPreflopMatrix, getHandAdviceAllPositions,
         getShortStackRecommendation, getShortStackRangeHands,
         getHandKey, getHandDescription, normalizeHandKey,
+        getPushFoldAdvice, getPushFoldMatrix, getHandDisplayName,
         getStrategyFAQ, generateDailyChallenge,
         OPPONENT_RANGE_PRESETS, SHORT_STACK_RANGES, HAND_COMBINATIONS
     };
