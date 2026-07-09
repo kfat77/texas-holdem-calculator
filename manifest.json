@@ -1,7 +1,7 @@
 {
-  "name": "德州扑克概率计算器",
-  "short_name": "扑克计算器",
-  "description": "德州扑克手牌概率计算工具 - 支持Pre-flop到River全阶段",
+  "name": "短筹码全压决策助手",
+  "short_name": "短筹码助手",
+  "description": "短筹码全压决策助手，离线可用",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0d3320",
