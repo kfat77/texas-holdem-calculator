@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0d3320">
+    <title>资金管理工具 | OPEN-poker</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+:root {
+  --bg-primary: #0d3320;
+  --bg-card: rgba(0,0,0,0.35);
+  --bg-input: rgba(0,0,0,0.25);
+  --text-primary: #ffffff;
+  --text-secondary: #b0c4b1;
+  --text-muted: #6b8f71;
+  --border: rgba(255,255,255,0.12);
+  --accent: #ffd700;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 100px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: linear-gradient(135deg, #1a472a 0%, #0d3320 50%, #1a472a 100%);
+  color: var(--text-primary);
+  min-height: 100vh;
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+}
+.container { max-width: 680px; margin: 0 auto; padding: 0 20px 60px; }
+header { text-align: center; padding: 28px 0 20px; }
+header h1 { font-size: clamp(1.4rem, 5vw, 2rem); font-weight: 700; color: #ffd700; margin-bottom: 4px; }
+header .subtitle { color: var(--text-secondary); font-size: 0.9rem; }
+header .back { display: inline-block; margin-top: 10px; color: var(--text-muted); font-size: 0.8rem; text-decoration: none; }
+header .back:hover { color: #ffd700; }
+
+.section { background: var(--bg-card); border-radius: var(--radius-lg); padding: 18px; margin-bottom: 14px; border: 1px solid var(--border); }
+.section-title { font-size: 1rem; font-weight: 600; color: #ffd700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+
+.input-group { margin-bottom: 14px; }
+.input-group label { display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px; }
+.input-group input {
+  width: 100%; padding: 10px 12px; border-radius: var(--radius-sm); border: 1.5px solid rgba(255,255,255,0.12);
+  background: rgba(0,0,0,0.25); color: #fff; font-size: 1rem; font-family: inherit; outline: none;
+}
+.input-group input:focus { border-color: rgba(255,215,0,0.5); }
+
+.btn {
+  padding: 10px 24px; border-radius: var(--radius-full); border: none; font-size: 0.9rem; font-weight: 600;
+  cursor: pointer; transition: all 0.25s ease; font-family: inherit; touch-action: manipulation; min-height: 44px;
+}
+.btn-primary {
+  background: linear-gradient(135deg, #ffd700, #ffaa00); color: #1a472a;
+  box-shadow: 0 4px 15px rgba(255,215,0,0.25); width: 100%;
+}
+.btn-primary:active { transform: scale(0.97); }
+
+.result-box {
+  border-radius: var(--radius-md); padding: 14px; margin-top: 14px; text-align: center; display: none;
+}
+.result-box.visible { display: block; animation: fadeIn 0.3s ease; }
+.result-box.safe { border: 2px solid var(--success); background: rgba(34,197,94,0.08); }
+.result-box.good { border: 2px solid var(--success); background: rgba(34,197,94,0.08); }
+.result-box.warning { border: 2px solid var(--warning); background: rgba(245,158,11,0.08); }
+.result-box.danger { border: 2px solid var(--danger); background: rgba(239,68,68,0.08); }
+.result-value { font-size: 1.4rem; font-weight: 700; color: #ffd700; margin-bottom: 4px; }
+.result-desc { font-size: 0.85rem; color: var(--text-secondary); }
+
+.tip-box {
+  background: rgba(255,215,0,0.06); border: 1px solid rgba(255,215,0,0.15);
+  border-radius: var(--radius-sm); padding: 10px 12px; font-size: 0.78rem; color: var(--text-secondary); margin-top: 12px; line-height: 1.5;
+}
+
+footer { text-align: center; padding: 20px 10px; color: var(--text-muted); font-size: 0.75rem; }
+footer a { color: var(--text-secondary); text-decoration: none; }
+
+@media (max-width: 600px) {
+  .container { padding: 0 14px 40px; }
+  .section { padding: 16px; }
+}
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💰 资金管理工具</h1>
+            <p class="subtitle">锦标赛玩家的实用计算器</p>
+            <a href="index.html" class="back">← 返回短筹码助手</a>
+        </header>
+
+        <!-- BRM 状态计算器 -->
+        <div class="section">
+            <div class="section-title">📊 BRM 资金管理状态</div>
+            <div class="input-group">
+                <label>当前总资金 (元/美元)</label>
+                <input type="number" id="brm-bankroll" placeholder="例如: 5000" min="0">
+            </div>
+            <div class="input-group">
+                <label>单次买入金额 (元/美元)</label>
+                <input type="number" id="brm-buyin" placeholder="例如: 100" min="1">
+            </div>
+            <button class="btn btn-primary" onclick="calcBRM()">计算买入数</button>
+            <div class="result-box" id="brm-result">
+                <div class="result-value" id="brm-value">-</div>
+                <div class="result-desc" id="brm-desc">-</div>
+            </div>
+            <div class="tip-box">
+                💡 锦标赛建议：至少保留 20-50 个买入。低于 10 个买入时建议降级，低于 5 个时停止游戏。
+            </div>
+        </div>
+
+        <!-- 赔率判断 -->
+        <div class="section">
+            <div class="section-title">🎯 底池赔率判断</div>
+            <div class="input-group">
+                <label>当前底池大小 (bb)</label>
+                <input type="number" id="pot-size" placeholder="例如: 10" min="0" step="0.5">
+            </div>
+            <div class="input-group">
+                <label>需要跟注的金额 (bb)</label>
+                <input type="number" id="call-amount" placeholder="例如: 5" min="0" step="0.5">
+            </div>
+            <div class="input-group">
+                <label>估算的手牌胜率 (%)</label>
+                <input type="number" id="hand-equity" placeholder="例如: 35" min="0" max="100" step="0.1">
+            </div>
+            <button class="btn btn-primary" onclick="calcOdds()">判断是否跟注</button>
+            <div class="result-box" id="odds-result">
+                <div class="result-value" id="odds-value">-</div>
+                <div class="result-desc" id="odds-desc">-</div>
+            </div>
+            <div class="tip-box">
+                💡 计算方式：底池赔率 = 跟注额 ÷ (底池 + 跟注额)。如果手牌胜率 > 底池赔率，则跟注是+EV的。
+            </div>
+        </div>
+
+        <!-- 破产风险 RoR -->
+        <div class="section">
+            <div class="section-title">⚠️ 破产风险 (Risk of Ruin)</div>
+            <div class="input-group">
+                <label>当前总资金 (买入数)</label>
+                <input type="number" id="ror-bankroll" placeholder="例如: 30" min="1">
+            </div>
+            <div class="input-group">
+                <label>估算胜率 (Win Rate, %)</label>
+                <input type="number" id="ror-winrate" placeholder="例如: 52" min="0" max="100" step="0.1">
+            </div>
+            <button class="btn btn-primary" onclick="calcRoR()">计算破产风险</button>
+            <div class="result-box" id="ror-result">
+                <div class="result-value" id="ror-value">-</div>
+                <div class="result-desc" id="ror-desc">-</div>
+            </div>
+            <div class="tip-box">
+                💡 简化公式: R = ((1-edge)/(1+edge))^buyIns，其中 edge = 胜率-败率。注意：此模型假设固定下注额，实际锦标赛波动更大。
+            </div>
+        </div>
+
+        <footer>
+            <p>OPEN-poker 短筹码全压决策助手 · <a href="index.html">返回首页</a></p>
+            <p style="margin-top:4px;font-size:0.7rem;">仅供学习娱乐使用 · 请理性游戏</p>
+        </footer>
+    </div>
+
+    <script>
+function calcBRM() {
+    const bankroll = parseFloat(document.getElementById('brm-bankroll').value);
+    const buyin = parseFloat(document.getElementById('brm-buyin').value);
+    const resultBox = document.getElementById('brm-result');
+    const valueEl = document.getElementById('brm-value');
+    const descEl = document.getElementById('brm-desc');
+
+    if (!bankroll || !buyin || buyin <= 0) {
+        alert('请输入有效的资金和买入金额');
+        return;
+    }
+
+    const buyIns = bankroll / buyin;
+    let status, colorClass, message;
+
+    if (buyIns >= 50) {
+        status = '非常安全';
+        colorClass = 'safe';
+        message = '资金充足，可以安心游戏。建议保持当前级别或适当升级。';
+    } else if (buyIns >= 30) {
+        status = '健康';
+        colorClass = 'good';
+        message = '资金管理良好，在当前级别游戏是安全的。';
+    } else if (buyIns >= 20) {
+        status = '注意';
+        colorClass = 'warning';
+        message = '资金尚可，但建议不要同时开太多桌，控制波动。';
+    } else if (buyIns >= 10) {
+        status = '危险';
+        colorClass = 'danger';
+        message = '资金紧张！建议降低买入级别，直到恢复到20个买入以上。';
+    } else {
+        status = '极度危险';
+        colorClass = 'danger';
+        message = '资金严重不足！强烈建议停止游戏或大幅降低级别。';
+    }
+
+    resultBox.className = 'result-box visible ' + colorClass;
+    valueEl.textContent = buyIns.toFixed(1) + ' 个买入 (' + status + ')';
+    descEl.textContent = message;
+}
+
+function calcOdds() {
+    const pot = parseFloat(document.getElementById('pot-size').value);
+    const toCall = parseFloat(document.getElementById('call-amount').value);
+    const equity = parseFloat(document.getElementById('hand-equity').value);
+    const resultBox = document.getElementById('odds-result');
+    const valueEl = document.getElementById('odds-value');
+    const descEl = document.getElementById('odds-desc');
+
+    if ((pot === 0 && toCall === 0) || !toCall || equity === undefined || isNaN(equity)) {
+        alert('请输入有效的底池、跟注额和胜率');
+        return;
+    }
+
+    const potOdds = toCall / (pot + toCall);
+    const potOddsPct = potOdds * 100;
+    const ev = (equity / 100) * pot - (1 - equity / 100) * toCall;
+
+    let status, colorClass, message;
+    if (equity > potOddsPct * 1.2) {
+        status = '应该跟注 (+EV)';
+        colorClass = 'safe';
+        message = `底池赔率需要 ${potOddsPct.toFixed(1)}% 胜率，你有 ${equity.toFixed(1)}%。EV = +${ev.toFixed(2)}bb。`;
+    } else if (equity > potOddsPct) {
+        status = '边缘跟注';
+        colorClass = 'warning';
+        message = `胜率刚好超过底池赔率，但优势很小。EV = +${ev.toFixed(2)}bb。考虑对手后续行动。`;
+    } else {
+        status = '应该弃牌 (-EV)';
+        colorClass = 'danger';
+        message = `底池赔率需要 ${potOddsPct.toFixed(1)}% 胜率，但你只有 ${equity.toFixed(1)}%。EV = ${ev.toFixed(2)}bb。`;
+    }
+
+    resultBox.className = 'result-box visible ' + colorClass;
+    valueEl.textContent = status;
+    descEl.textContent = message;
+}
+
+function calcRoR() {
+    const buyIns = parseFloat(document.getElementById('ror-bankroll').value);
+    const winRate = parseFloat(document.getElementById('ror-winrate').value);
+    const resultBox = document.getElementById('ror-result');
+    const valueEl = document.getElementById('ror-value');
+    const descEl = document.getElementById('ror-desc');
+
+    if (!buyIns || !winRate || winRate <= 0 || winRate >= 100) {
+        alert('请输入有效的买入数和胜率');
+        return;
+    }
+
+    const edge = winRate / 100 - (1 - winRate / 100);
+    let risk;
+    if (edge <= 0) {
+        risk = 1;
+    } else {
+        const base = (1 - edge) / (1 + edge);
+        risk = Math.pow(base, buyIns);
+    }
+    const riskPct = risk * 100;
+
+    let status, colorClass, message;
+    if (riskPct < 1) {
+        status = '极低风险';
+        colorClass = 'safe';
+        message = '资金管理和技术优势都很好，长期破产概率非常低。';
+    } else if (riskPct < 5) {
+        status = '低风险';
+        colorClass = 'good';
+        message = '破产风险可控，但仍需注意方差管理。';
+    } else if (riskPct < 15) {
+        status = '中等风险';
+        colorClass = 'warning';
+        message = '有一定破产风险，建议增加资金储备或降低波动。';
+    } else {
+        status = '高风险';
+        colorClass = 'danger';
+        message = '破产风险很高！请增加资金、降低级别或提升胜率。';
+    }
+
+    resultBox.className = 'result-box visible ' + colorClass;
+    valueEl.textContent = '破产概率: ' + riskPct.toFixed(2) + '% (' + status + ')';
+    descEl.textContent = message + ' (基于简化模型，实际锦标赛方差更大)';
+}
+    </script>
+</body>
+</html>

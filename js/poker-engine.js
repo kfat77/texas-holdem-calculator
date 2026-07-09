@@ -987,3 +987,675 @@ function getAICoachResponse(userInput) {
     return responses[Math.floor(Math.random() * responses.length)];
 }
 
+// ============ 短筹码全压决策引擎（Short-Stack Push/Fold Engine）============
+
+// 对手范围预设（Top % 范围）
+const OPPONENT_RANGE_PRESETS = {
+    'tight': {
+        name: '紧手 (Top 10%)',
+        hands: ['AA','KK','QQ','JJ','TT','AKs','AQs','AKo']
+    },
+    'standard': {
+        name: '标准 (Top 20%)',
+        hands: ['AA','KK','QQ','JJ','TT','99','88','77','66',
+                'AKs','AQs','AJs','ATs','A9s','KQs','KJs','KTs','QJs','QTs','JTs',
+                'AKo','AQo','AJo','ATo','KQo','KJo']
+    },
+    'loose': {
+        name: '松手 (Top 30%)',
+        hands: ['AA','KK','QQ','JJ','TT','99','88','77','66','55',
+                'AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','KQs','KJs','KTs','K9s','QJs','QTs','QTs','JTs','T9s',
+                'AKo','AQo','AJo','ATo','A9o','KQo','KJo','KTo','QJo']
+    },
+    'crazy': {
+        name: '疯狂 (Top 50%)',
+        hands: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','22',
+                'AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','A4s','A3s','A2s',
+                'KQs','KJs','KTs','K9s','K8s','K7s','K6s','K5s','QJs','QTs','Q9s','Q8s','JTs','J9s','T9s','T8s','98s','87s','76s','65s','54s',
+                'AKo','AQo','AJo','ATo','A9o','A8o','A7o','A6o','A5o','A4o','A3o','A2o',
+                'KQo','KJo','KTo','K9o','QJo','QTo','JTo','T9o']
+    }
+};
+
+// 手牌到所有具体组合的映射（用于范围计算）
+const HAND_COMBINATIONS = {};
+
+function initHandCombinations() {
+    const ranks = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
+    const suits = ['♠','♥','♣','♦'];
+    
+    for (let i = 0; i < ranks.length; i++) {
+        for (let j = i; j < ranks.length; j++) {
+            const r1 = ranks[i], r2 = ranks[j];
+            if (i === j) {
+                // 对子: 6种组合
+                const key = r1 + r2;
+                const combos = [];
+                for (let s1 = 0; s1 < 4; s1++) {
+                    for (let s2 = s1 + 1; s2 < 4; s2++) {
+                        combos.push([new Card(suits[s1], r1), new Card(suits[s2], r2)]);
+                    }
+                }
+                HAND_COMBINATIONS[key] = combos;
+            } else {
+                // 同花: 4种组合
+                const keySuited = r1 + r2 + 's';
+                const combosSuited = [];
+                for (const suit of suits) {
+                    combosSuited.push([new Card(suit, r1), new Card(suit, r2)]);
+                }
+                HAND_COMBINATIONS[keySuited] = combosSuited;
+                
+                // 不同花: 12种组合
+                const keyOffsuit = r1 + r2 + 'o';
+                const combosOffsuit = [];
+                for (let s1 = 0; s1 < 4; s1++) {
+                    for (let s2 = 0; s2 < 4; s2++) {
+                        if (s1 !== s2) {
+                            combosOffsuit.push([new Card(suits[s1], r1), new Card(suits[s2], r2)]);
+                        }
+                    }
+                }
+                HAND_COMBINATIONS[keyOffsuit] = combosOffsuit;
+            }
+        }
+    }
+}
+
+initHandCombinations();
+
+// 将手牌键标准化（如 'AKs' -> 'AKs', 'KAo' -> 'AKo'）
+function normalizeHandKey(handKey) {
+    if (handKey.length === 2) return handKey; // 对子
+    const r1 = handKey[0], r2 = handKey[1], type = handKey[2];
+    const rankOrder = {'A':0,'K':1,'Q':2,'J':3,'T':4,'9':5,'8':6,'7':7,'6':8,'5':9,'4':10,'3':11,'2':12};
+    if (rankOrder[r1] <= rankOrder[r2]) {
+        return r1 + r2 + type;
+    }
+    return r2 + r1 + (type === 's' ? 's' : 'o');
+}
+
+// Range 类：对手范围建模
+class Range {
+    constructor(handKeys) {
+        // 兼容 index.html 中的 { type: 'preset', value: 'standard' } 调用方式
+        if (handKeys && typeof handKeys === 'object' && !Array.isArray(handKeys)) {
+            if (handKeys.type === 'preset') {
+                return Range.fromPreset(handKeys.value);
+            } else if (handKeys.type === 'matrix') {
+                return Range.fromMatrix(handKeys.value);
+            }
+        }
+        
+        this.handKeys = [];
+        this.combinations = [];
+        for (const key of handKeys || []) {
+            const normKey = normalizeHandKey(key);
+            if (HAND_COMBINATIONS[normKey]) {
+                this.handKeys.push(normKey);
+                this.combinations.push(...HAND_COMBINATIONS[normKey]);
+            }
+        }
+    }
+    
+    static fromPreset(presetKey) {
+        const preset = OPPONENT_RANGE_PRESETS[presetKey];
+        return preset ? new Range(preset.hands) : new Range([]);
+    }
+    
+    static fromMatrix(matrix) {
+        // matrix: 13x13 布尔数组，true 表示选中
+        const hands = [];
+        const ranks = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
+        for (let i = 0; i < 13; i++) {
+            for (let j = 0; j < 13; j++) {
+                if (matrix[i][j]) {
+                    let key;
+                    if (i === j) key = ranks[i] + ranks[j];
+                    else if (i < j) key = ranks[i] + ranks[j] + 's';
+                    else key = ranks[j] + ranks[i] + 'o';
+                    hands.push(key);
+                }
+            }
+        }
+        return new Range(hands);
+    }
+    
+    getRandomHand() {
+        if (this.combinations.length === 0) return null;
+        return this.combinations[Math.floor(Math.random() * this.combinations.length)];
+    }
+    
+    getComboCount() {
+        return this.combinations.length;
+    }
+    
+    contains(handKey) {
+        return this.handKeys.includes(normalizeHandKey(handKey));
+    }
+}
+
+// 计算手牌 vs 对手范围的 Equity（蒙特卡洛）
+// 兼容传入单个 Range 或 Range 数组
+function calculateEquityVsRange(holeCards, opponentRange, communityCards = [], numSimulations = 20000) {
+    if (holeCards.length !== 2) return { equity: 0, winRate: 0, tieRate: 0 };
+    
+    // 如果传入数组，使用多对手计算
+    if (Array.isArray(opponentRange)) {
+        return calculateEquityVsMultipleRanges(holeCards, opponentRange, communityCards, numSimulations);
+    }
+    
+    if (!opponentRange || opponentRange.combinations.length === 0) return { equity: 1, winRate: 1, tieRate: 0 };
+    
+    const knownCards = [...holeCards, ...communityCards];
+    const deck = removeCards(createDeck(), knownCards);
+    const remainingToDraw = 5 - communityCards.length;
+    
+    let wins = 0;
+    let ties = 0;
+    
+    // 过滤掉对手范围中已知的牌
+    const availableOpponentCombos = opponentRange.combinations.filter(combo => {
+        const comboStr = combo.map(c => c.toString()).join(',');
+        const knownStr = knownCards.map(c => c.toString()).join(',');
+        return !combo.some(c => knownCards.some(k => k.toString() === c.toString()));
+    });
+    
+    if (availableOpponentCombos.length === 0) return { equity: 1, winRate: 1, tieRate: 0 };
+    
+    for (let i = 0; i < numSimulations; i++) {
+        // 随机选择对手手牌
+        const oppCombo = availableOpponentCombos[Math.floor(Math.random() * availableOpponentCombos.length)];
+        
+        // 从剩余牌堆中构建 board
+        const remainingDeck = removeCards(deck, oppCombo);
+        const shuffled = [...remainingDeck];
+        for (let j = shuffled.length - 1; j > 0; j--) {
+            const k = Math.floor(Math.random() * (j + 1));
+            [shuffled[j], shuffled[k]] = [shuffled[k], shuffled[j]];
+        }
+        
+        const board = [...communityCards];
+        let idx = 0;
+        while (board.length < 5) {
+            board.push(shuffled[idx++]);
+        }
+        
+        const myBest = evaluate7Cards([...holeCards, ...board]);
+        const oppBest = evaluate7Cards([...oppCombo, ...board]);
+        const cmp = compareHands(myBest, oppBest);
+        
+        if (cmp > 0) wins++;
+        else if (cmp === 0) ties++;
+    }
+    
+    const equity = (wins + ties * 0.5) / numSimulations;
+    return {
+        equity: equity,
+        winRate: wins / numSimulations,
+        tieRate: ties / numSimulations
+    };
+}
+
+// 计算手牌 vs 多个对手范围的 Equity
+function calculateEquityVsMultipleRanges(holeCards, opponentRanges, communityCards = [], numSimulations = 20000) {
+    if (holeCards.length !== 2) return 0;
+    if (!opponentRanges || opponentRanges.length === 0) return 1;
+    
+    const knownCards = [...holeCards, ...communityCards];
+    let deck = removeCards(createDeck(), knownCards);
+    
+    let wins = 0;
+    let ties = 0;
+    
+    for (let i = 0; i < numSimulations; i++) {
+        let currentDeck = [...deck];
+        const opponentHands = [];
+        let valid = true;
+        
+        for (const range of opponentRanges) {
+            const availableCombos = range.combinations.filter(combo => {
+                return combo.every(c => !opponentHands.flat().some(oc => oc.toString() === c.toString()))
+                    && !knownCards.some(k => k.toString() === c.toString());
+            });
+            
+            if (availableCombos.length === 0) { valid = false; break; }
+            
+            const oppCombo = availableCombos[Math.floor(Math.random() * availableCombos.length)];
+            opponentHands.push(oppCombo);
+            currentDeck = removeCards(currentDeck, oppCombo);
+        }
+        
+        if (!valid) continue;
+        
+        // 补齐公共牌
+        const shuffled = [...currentDeck];
+        for (let j = shuffled.length - 1; j > 0; j--) {
+            const k = Math.floor(Math.random() * (j + 1));
+            [shuffled[j], shuffled[k]] = [shuffled[k], shuffled[j]];
+        }
+        
+        const board = [...communityCards];
+        let idx = 0;
+        while (board.length < 5) {
+            board.push(shuffled[idx++]);
+        }
+        
+        const myBest = evaluate7Cards([...holeCards, ...board]);
+        
+        let bestOpp = null;
+        for (const oppHand of opponentHands) {
+            const oppBest = evaluate7Cards([...oppHand, ...board]);
+            if (!bestOpp || compareHands(oppBest, bestOpp) > 0) {
+                bestOpp = oppBest;
+            }
+        }
+        
+        const cmp = compareHands(myBest, bestOpp);
+        if (cmp > 0) wins++;
+        else if (cmp === 0) ties++;
+    }
+    
+    const equity = (wins + ties * 0.5) / numSimulations;
+    return {
+        equity: equity,
+        winRate: wins / numSimulations,
+        tieRate: ties / numSimulations
+    };
+}
+
+// 获取手牌的标准化键（如 [A♠, K♥] -> 'AKo'）
+function getHandKey(cards) {
+    if (cards.length !== 2) return '';
+    const r1 = cards[0].rank, r2 = cards[1].rank;
+    const rankOrder = {'A':0,'K':1,'Q':2,'J':3,'T':4,'9':5,'8':6,'7':7,'6':8,'5':9,'4':10,'3':11,'2':12};
+    
+    if (r1 === r2) return r1 + r2;
+    
+    const isSuited = cards[0].suit === cards[1].suit;
+    const type = isSuited ? 's' : 'o';
+    
+    if (rankOrder[r1] <= rankOrder[r2]) {
+        return r1 + r2 + type;
+    }
+    return r2 + r1 + type;
+}
+
+// 短筹码推荐全压范围（基于位置 + 筹码深度，纯 ChipEV 近似）
+// 返回: 'P' = 全压(Push), 'F' = 弃牌(Fold), 'M' = 边缘(Marginal)
+const SHORT_STACK_RANGES = {
+    'UTG': {
+        1: ['AA','KK','QQ','JJ','TT','99','88','AKs','AQs','AJs','AKo','AQo'],
+        2: ['AA','KK','QQ','JJ','TT','99','88','77','AKs','AQs','AJs','ATs','AKo','AQo','AJo'],
+        3: ['AA','KK','QQ','JJ','TT','99','88','77','66','AKs','AQs','AJs','ATs','A9s','AKo','AQo','AJo','KQs'],
+        5: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','AKs','AQs','AJs','ATs','A9s','A8s','AKo','AQo','AJo','ATo','KQs','KJs','QJs'],
+        7: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','AKo','AQo','AJo','ATo','KQs','KJs','KTs','QJs','QTs','JTs'],
+        10: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','A4s','AKo','AQo','AJo','ATo','A9o','KQs','KJs','KTs','K9s','QJs','QTs','JTs','T9s'],
+        15: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','22','AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','A4s','A3s','A2s','AKo','AQo','AJo','ATo','A9o','A8o','A7o','KQs','KJs','KTs','K9s','K8s','QJs','QTs','Q9s','JTs','J9s','T9s','T8s','98s'],
+        20: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','22','AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','A4s','A3s','A2s','KQs','KJs','KTs','K9s','K8s','K7s','QJs','QTs','Q9s','Q8s','JTs','J9s','J8s','T9s','T8s','T7s','98s','97s','87s','76s','65s','AKo','AQo','AJo','ATo','A9o','A8o','A7o','A6o','A5o','KQo','KJo','KTo','QJo','JTo']
+    },
+    'MP': {
+        1: ['AA','KK','QQ','JJ','TT','99','88','77','AKs','AQs','AJs','AKo','AQo','AJo'],
+        2: ['AA','KK','QQ','JJ','TT','99','88','77','66','AKs','AQs','AJs','ATs','AKo','AQo','AJo','KQs'],
+        3: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','AKs','AQs','AJs','ATs','A9s','AKo','AQo','AJo','ATo','KQs','KJs'],
+        5: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','AKs','AQs','AJs','ATs','A9s','A8s','A7s','AKo','AQo','AJo','ATo','A9o','KQs','KJs','KTs','QJs','QTs','JTs'],
+        7: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','A4s','AKo','AQo','AJo','ATo','A9o','A8o','KQs','KJs','KTs','K9s','QJs','QTs','Q9s','JTs','T9s','T8s'],
+        10: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','22','AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','A4s','A3s','A2s','AKo','AQo','AJo','ATo','A9o','A8o','A7o','A6o','KQs','KJs','KTs','K9s','K8s','QJs','QTs','Q9s','JTs','J9s','T9s','T8s','98s','87s'],
+        15: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','22','AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','A4s','A3s','A2s','KQs','KJs','KTs','K9s','K8s','K7s','K6s','QJs','QTs','Q9s','Q8s','JTs','J9s','J8s','T9s','T8s','T7s','98s','97s','87s','76s','65s','AKo','AQo','AJo','ATo','A9o','A8o','A7o','A6o','A5o','A4o','KQo','KJo','KTo','QJo','QTo','JTo'],
+        20: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','22','AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','A4s','A3s','A2s','KQs','KJs','KTs','K9s','K8s','K7s','K6s','K5s','K4s','QJs','QTs','Q9s','Q8s','Q7s','Q6s','JTs','J9s','J8s','J7s','T9s','T8s','T7s','98s','97s','96s','87s','86s','76s','75s','65s','64s','54s','AKo','AQo','AJo','ATo','A9o','A8o','A7o','A6o','A5o','A4o','A3o','KQo','KJo','KTo','K9o','QJo','QTo','JTo','T9o']
+    },
+    'CO': {
+        1: ['AA','KK','QQ','JJ','TT','99','88','77','66','AKs','AQs','AJs','AKo','AQo','AJo','ATo','KQs'],
+        2: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','AKs','AQs','AJs','ATs','AKo','AQo','AJo','ATo','KQs','KJs','QJs'],
+        3: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','AKs','AQs','AJs','ATs','A9s','A8s','AKo','AQo','AJo','ATo','A9o','KQs','KJs','KTs','QJs','QTs','JTs'],
+        5: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','AKo','AQo','AJo','ATo','A9o','A8o','KQs','KJs','KTs','K9s','QJs','QTs','Q9s','JTs','J9s','T9s','T8s','98s'],
+        7: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','22','AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','A4s','AKo','AQo','AJo','ATo','A9o','A8o','A7o','A6o','KQs','KJs','KTs','K9s','K8s','QJs','QTs','Q9s','Q8s','JTs','J9s','J8s','T9s','T8s','T7s','98s','97s','87s','76s','65s'],
+        10: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','22','AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','A4s','A3s','A2s','KQs','KJs','KTs','K9s','K8s','K7s','K6s','QJs','QTs','Q9s','Q8s','Q7s','JTs','J9s','J8s','J7s','T9s','T8s','T7s','T6s','98s','97s','96s','87s','86s','76s','75s','65s','64s','54s','AKo','AQo','AJo','ATo','A9o','A8o','A7o','A6o','A5o','A4o','KQo','KJo','KTo','K9o','QJo','QTo','JTo','T9o'],
+        15: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','22','AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','A4s','A3s','A2s','KQs','KJs','KTs','K9s','K8s','K7s','K6s','K5s','K4s','QJs','QTs','Q9s','Q8s','Q7s','Q6s','Q5s','JTs','J9s','J8s','J7s','J6s','T9s','T8s','T7s','T6s','T5s','98s','97s','96s','95s','87s','86s','85s','76s','75s','74s','65s','64s','63s','54s','53s','AKo','AQo','AJo','ATo','A9o','A8o','A7o','A6o','A5o','A4o','A3o','KQo','KJo','KTo','K9o','K8o','QJo','QTo','Q9o','JTo','J9o','T9o','T8o'],
+        20: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','22','AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','A4s','A3s','A2s','KQs','KJs','KTs','K9s','K8s','K7s','K6s','K5s','K4s','K3s','K2s','QJs','QTs','Q9s','Q8s','Q7s','Q6s','Q5s','Q4s','Q3s','Q2s','JTs','J9s','J8s','J7s','J6s','J5s','J4s','T9s','T8s','T7s','T6s','T5s','98s','97s','96s','95s','87s','86s','85s','76s','75s','74s','65s','64s','63s','54s','53s','52s','43s','AKo','AQo','AJo','ATo','A9o','A8o','A7o','A6o','A5o','A4o','A3o','A2o','KQo','KJo','KTo','K9o','K8o','K7o','K6o','K5o','QJo','QTo','Q9o','Q8o','JTo','J9o','J8o','T9o','T8o','T7o','98o','87o']
+    },
+    'BTN': {
+        1: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','AKs','AQs','AJs','AKo','AQo','AJo','ATo','KQs','KJs','QJs','JTs'],
+        2: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','AKs','AQs','AJs','ATs','AKo','AQo','AJo','ATo','A9o','KQs','KJs','KTs','QJs','QTs','JTs','T9s'],
+        3: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','AKs','AQs','AJs','ATs','A9s','A8s','AKo','AQo','AJo','ATo','A9o','A8o','KQs','KJs','KTs','K9s','QJs','QTs','Q9s','JTs','J9s','T9s','T8s','98s','87s'],
+        5: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','22','AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','AKo','AQo','AJo','ATo','A9o','A8o','A7o','A6o','A5o','KQs','KJs','KTs','K9s','K8s','QJs','QTs','Q9s','Q8s','JTs','J9s','J8s','T9s','T8s','T7s','98s','97s','87s','76s','65s','54s','KQo','KJo','QJo'],
+        7: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','22','AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','A4s','A3s','A2s','KQs','KJs','KTs','K9s','K8s','K7s','QJs','QTs','Q9s','Q8s','Q7s','JTs','J9s','J8s','J7s','T9s','T8s','T7s','T6s','98s','97s','96s','87s','86s','76s','75s','65s','64s','54s','53s','AKo','AQo','AJo','ATo','A9o','A8o','A7o','A6o','A5o','A4o','KQo','KJo','KTo','K9o','QJo','QTo','JTo','T9o'],
+        10: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','22','AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','A4s','A3s','A2s','KQs','KJs','KTs','K9s','K8s','K7s','K6s','K5s','K4s','QJs','QTs','Q9s','Q8s','Q7s','Q6s','Q5s','JTs','J9s','J8s','J7s','J6s','J5s','T9s','T8s','T7s','T6s','T5s','98s','97s','96s','95s','87s','86s','85s','76s','75s','74s','65s','64s','63s','54s','53s','52s','43s','AKo','AQo','AJo','ATo','A9o','A8o','A7o','A6o','A5o','A4o','A3o','A2o','KQo','KJo','KTo','K9o','K8o','K7o','QJo','QTo','Q9o','JTo','J9o','T9o','T8o','98o','87o'],
+        15: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','22','AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','A4s','A3s','A2s','KQs','KJs','KTs','K9s','K8s','K7s','K6s','K5s','K4s','K3s','K2s','QJs','QTs','Q9s','Q8s','Q7s','Q6s','Q5s','Q4s','Q3s','Q2s','JTs','J9s','J8s','J7s','J6s','J5s','J4s','T9s','T8s','T7s','T6s','T5s','T4s','98s','97s','96s','95s','94s','87s','86s','85s','84s','76s','75s','74s','73s','65s','64s','63s','62s','54s','53s','52s','43s','42s','32s','AKo','AQo','AJo','ATo','A9o','A8o','A7o','A6o','A5o','A4o','A3o','A2o','KQo','KJo','KTo','K9o','K8o','K7o','K6o','K5o','QJo','QTo','Q9o','Q8o','Q7o','JTo','J9o','J8o','T9o','T8o','T7o','98o','97o','87o','76o'],
+        20: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','22','AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','A4s','A3s','A2s','KQs','KJs','KTs','K9s','K8s','K7s','K6s','K5s','K4s','K3s','K2s','QJs','QTs','Q9s','Q8s','Q7s','Q6s','Q5s','Q4s','Q3s','Q2s','JTs','J9s','J8s','J7s','J6s','J5s','J4s','J3s','T9s','T8s','T7s','T6s','T5s','T4s','T3s','98s','97s','96s','95s','94s','93s','87s','86s','85s','84s','83s','76s','75s','74s','73s','72s','65s','64s','63s','62s','54s','53s','52s','43s','42s','32s','AKo','AQo','AJo','ATo','A9o','A8o','A7o','A6o','A5o','A4o','A3o','A2o','KQo','KJo','KTo','K9o','K8o','K7o','K6o','K5o','K4o','K3o','QJo','QTo','Q9o','Q8o','Q7o','Q6o','JTo','J9o','J8o','J7o','T9o','T8o','T7o','T6o','98o','97o','96o','87o','86o','76o','75o','65o','64o','54o']
+    },
+    'SB': {
+        1: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','AKs','AQs','AJs','AKo','AQo','AJo','ATo','KQs','KJs','QJs','JTs','T9s'],
+        2: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','AKs','AQs','AJs','ATs','AKo','AQo','AJo','ATo','A9o','KQs','KJs','KTs','QJs','QTs','JTs','T9s','T8s','98s'],
+        3: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','AKs','AQs','AJs','ATs','A9s','A8s','AKo','AQo','AJo','ATo','A9o','A8o','KQs','KJs','KTs','K9s','QJs','QTs','Q9s','JTs','J9s','T9s','T8s','98s','87s','76s'],
+        5: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','22','AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','AKo','AQo','AJo','ATo','A9o','A8o','A7o','A6o','KQs','KJs','KTs','K9s','K8s','QJs','QTs','Q9s','Q8s','JTs','J9s','J8s','T9s','T8s','T7s','98s','97s','87s','76s','65s','54s','KQo','KJo','QJo'],
+        7: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','22','AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','A4s','A3s','A2s','KQs','KJs','KTs','K9s','K8s','K7s','QJs','QTs','Q9s','Q8s','Q7s','JTs','J9s','J8s','J7s','T9s','T8s','T7s','T6s','98s','97s','96s','87s','86s','76s','75s','65s','64s','54s','53s','AKo','AQo','AJo','ATo','A9o','A8o','A7o','A6o','A5o','A4o','KQo','KJo','KTo','K9o','QJo','QTo','JTo','T9o'],
+        10: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','22','AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','A4s','A3s','A2s','KQs','KJs','KTs','K9s','K8s','K7s','K6s','K5s','K4s','QJs','QTs','Q9s','Q8s','Q7s','Q6s','Q5s','JTs','J9s','J8s','J7s','J6s','J5s','T9s','T8s','T7s','T6s','T5s','98s','97s','96s','95s','87s','86s','85s','76s','75s','74s','65s','64s','63s','54s','53s','52s','43s','AKo','AQo','AJo','ATo','A9o','A8o','A7o','A6o','A5o','A4o','A3o','A2o','KQo','KJo','KTo','K9o','K8o','K7o','QJo','QTo','Q9o','JTo','J9o','T9o','T8o','98o','87o'],
+        15: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','22','AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','A4s','A3s','A2s','KQs','KJs','KTs','K9s','K8s','K7s','K6s','K5s','K4s','K3s','K2s','QJs','QTs','Q9s','Q8s','Q7s','Q6s','Q5s','Q4s','Q3s','Q2s','JTs','J9s','J8s','J7s','J6s','J5s','J4s','T9s','T8s','T7s','T6s','T5s','T4s','98s','97s','96s','95s','94s','87s','86s','85s','84s','76s','75s','74s','73s','72s','65s','64s','63s','62s','54s','53s','52s','43s','42s','32s','AKo','AQo','AJo','ATo','A9o','A8o','A7o','A6o','A5o','A4o','A3o','A2o','KQo','KJo','KTo','K9o','K8o','K7o','K6o','K5o','QJo','QTo','Q9o','Q8o','Q7o','JTo','J9o','J8o','T9o','T8o','T7o','98o','97o','87o','76o'],
+        20: ['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','22','AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','A4s','A3s','A2s','KQs','KJs','KTs','K9s','K8s','K7s','K6s','K5s','K4s','K3s','K2s','QJs','QTs','Q9s','Q8s','Q7s','Q6s','Q5s','Q4s','Q3s','Q2s','JTs','J9s','J8s','J7s','J6s','J5s','J4s','J3s','T9s','T8s','T7s','T6s','T5s','T4s','T3s','98s','97s','96s','95s','94s','93s','87s','86s','85s','84s','83s','76s','75s','74s','73s','72s','65s','64s','63s','62s','54s','53s','52s','43s','42s','32s','AKo','AQo','AJo','ATo','A9o','A8o','A7o','A6o','A5o','A4o','A3o','A2o','KQo','KJo','KTo','K9o','K8o','K7o','K6o','K5o','K4o','K3o','QJo','QTo','Q9o','Q8o','Q7o','Q6o','JTo','J9o','J8o','J7o','T9o','T8o','T7o','T6o','98o','97o','96o','87o','86o','76o','75o','65o','64o','54o']
+    }
+};
+
+// BB 位置单独处理（因为 BB 已经投入了盲注，范围更宽）
+function getShortStackRangeBB(stackDepth) {
+    // BB 在任何短筹码深度下都更宽
+    return ['AA','KK','QQ','JJ','TT','99','88','77','66','55','44','33','22',
+            'AKs','AQs','AJs','ATs','A9s','A8s','A7s','A6s','A5s','A4s','A3s','A2s',
+            'KQs','KJs','KTs','K9s','K8s','K7s','K6s','K5s','K4s','K3s','K2s',
+            'QJs','QTs','Q9s','Q8s','Q7s','Q6s','Q5s','Q4s','Q3s','Q2s',
+            'JTs','J9s','J8s','J7s','J6s','J5s','J4s','J3s','J2s',
+            'T9s','T8s','T7s','T6s','T5s','T4s','T3s','T2s',
+            '98s','97s','96s','95s','94s','93s','92s',
+            '87s','86s','85s','84s','83s','82s',
+            '76s','75s','74s','73s','72s',
+            '65s','64s','63s','62s',
+            '54s','53s','52s',
+            '43s','42s',
+            '32s',
+            'AKo','AQo','AJo','ATo','A9o','A8o','A7o','A6o','A5o','A4o','A3o','A2o',
+            'KQo','KJo','KTo','K9o','K8o','K7o','K6o','K5o','K4o','K3o','K2o',
+            'QJo','QTo','Q9o','Q8o','Q7o','Q6o','Q5o','Q4o','Q3o','Q2o',
+            'JTo','J9o','J8o','J7o','J6o','J5o','J4o','J3o','J2o',
+            'T9o','T8o','T7o','T6o','T5o','T4o','T3o','T2o',
+            '98o','97o','96o','95o','94o','93o','92o',
+            '87o','86o','85o','84o','83o','82o',
+            '76o','75o','74o','73o','72o',
+            '65o','64o','63o','62o',
+            '54o','53o','52o',
+            '43o','42o',
+            '32o'];
+}
+
+// 获取短筹码推荐行动
+function getShortStackRecommendation(position, stackDepth, handKey) {
+    let range;
+    if (position === 'BB') {
+        range = getShortStackRangeBB(stackDepth);
+    } else {
+        const posRanges = SHORT_STACK_RANGES[position] || SHORT_STACK_RANGES['UTG'];
+        // 找到最接近的筹码深度
+        const depths = Object.keys(posRanges).map(Number).sort((a, b) => a - b);
+        let closestDepth = depths[0];
+        for (const d of depths) {
+            if (d <= stackDepth) closestDepth = d;
+            else break;
+        }
+        range = posRanges[closestDepth] || [];
+    }
+    
+    const normKey = normalizeHandKey(handKey);
+    if (range.includes(normKey)) return 'P';
+    
+    // 检查是否接近范围（相邻的筹码深度）
+    const posRanges = position === 'BB' ? null : (SHORT_STACK_RANGES[position] || SHORT_STACK_RANGES['UTG']);
+    if (posRanges) {
+        const depths = Object.keys(posRanges).map(Number).sort((a, b) => a - b);
+        for (const d of depths) {
+            if (posRanges[d].includes(normKey)) return 'M';
+        }
+    }
+    return 'F';
+}
+
+// 获取推荐范围的手牌列表
+function getShortStackRangeHands(position, stackDepth) {
+    if (position === 'BB') return getShortStackRangeBB(stackDepth);
+    const posRanges = SHORT_STACK_RANGES[position] || SHORT_STACK_RANGES['UTG'];
+    const depths = Object.keys(posRanges).map(Number).sort((a, b) => a - b);
+    let closestDepth = depths[0];
+    for (const d of depths) {
+        if (d <= stackDepth) closestDepth = d;
+        else break;
+    }
+    return posRanges[closestDepth] || [];
+}
+
+// 计算 ChipEV（筹码期望值）
+// 假设：全压后，对手按范围跟注，根据 equity 计算期望筹码变化
+function calculateChipEV(equity, stackDepth, opponentCount, opponentCallProb = 0.3) {
+    // 简化模型：
+    // 如果所有人都弃牌，赢得盲注（约 1.5bb）
+    // 如果有人跟注，根据 equity 决定赢/输
+    // 假设每个对手有 opponentCallProb 的概率跟注
+    
+    const deadMoney = 1.5; // bb + sb
+    const foldProb = Math.pow(1 - opponentCallProb, opponentCount);
+    const callProb = 1 - foldProb;
+    
+    // 当有人跟注时，假设平均 1 个对手跟注（简化）
+    // 期望收益 = equity * (stackDepth + deadMoney) - (1 - equity) * stackDepth
+    const evWhenCalled = equity * (stackDepth + deadMoney) - (1 - equity) * stackDepth;
+    
+    // 综合 ChipEV
+    const chipEV = foldProb * deadMoney + callProb * evWhenCalled;
+    return chipEV;
+}
+
+// 获取手牌描述（如 "Ace-King offsuit"）
+function getHandDescription(handKey) {
+    const rankNames = {
+        'A': 'Ace', 'K': 'King', 'Q': 'Queen', 'J': 'Jack', 'T': 'Ten',
+        '9': 'Nine', '8': 'Eight', '7': 'Seven', '6': 'Six', '5': 'Five',
+        '4': 'Four', '3': 'Three', '2': 'Two'
+    };
+    if (handKey.length === 2) {
+        return `口袋对子 ${rankNames[handKey[0]]}`;
+    }
+    const r1 = rankNames[handKey[0]];
+    const r2 = rankNames[handKey[1]];
+    const type = handKey[2] === 's' ? '同花' : '非同花';
+    return `${r1}-${r2} ${type}`;
+}
+
+// ============ 策略 FAQ 知识库（短筹码专题）============
+
+const STRATEGY_FAQ = [
+    {
+        question: { zh: '20bb 在 BTN 为什么可以全压更宽的范围？', en: 'Why can I push a wider range on BTN with 20bb?' },
+        answer: { 
+            zh: 'BTN（按钮位）有两个核心优势：1）位置优势——你最后行动，能观察到前面所有玩家的决策；2）盲注压力——当所有人都弃牌到你时，你只需要击败两个盲注。20bb 在 BTN 全压，如果 SB 和 BB 弃牌，你直接赢得 1.5bb。即使被跟注，你的位置优势让你在翻后最后行动。相比 UTG 需要面对 5 个未行动的玩家，BTN 的风险大幅降低。',
+            en: 'BTN has two key advantages: 1) Position — you act last after seeing all decisions; 2) Blind pressure — when everyone folds to you, you only need to beat the blinds. Pushing 20bb from BTN, if both blinds fold, you win 1.5bb immediately. Even if called, your position lets you act last postflop. Compared to UTG facing 5 unacted players, risk is much lower.'
+        }
+    },
+    {
+        question: { zh: '面对松手玩家，全压范围应该收紧还是放宽？', en: 'Should I tighten or widen my push range against loose players?' },
+        answer: { 
+            zh: '面对松手玩家（跟注范围宽），你应该收紧全压范围。因为松手玩家更可能用边缘牌跟注你的全压，这降低了你的 fold equity（弃牌赢率）。如果对手经常用 QJs、A9o 这种牌跟注，你需要确保自己的手牌在对抗这些范围时仍有足够的 equity。一般来说，面对跟注范围 Top 30% 的对手，你的全压范围应该比面对 Top 10% 对手时收紧约 15-20%。',
+            en: 'Against loose players (wide calling range), tighten your push range. Loose players are more likely to call with marginal hands, reducing your fold equity. If opponents regularly call with hands like QJs or A9o, ensure your hand has sufficient equity against that range. Generally, against a Top 30% calling range, tighten your push range by about 15-20% compared to facing a Top 10% range.'
+        }
+    },
+    {
+        question: { zh: 'ICM 压力是什么意思？为什么决赛桌要更紧？', en: 'What is ICM pressure? Why play tighter at the final table?' },
+        answer: { 
+            zh: 'ICM（独立筹码模型）将筹码转化为实际的奖金期望值。在锦标赛后期，尤其是泡沫期或决赛桌，筹码的实际价值是非线性的——损失筹码的代价大于赢得同等筹码的收益。例如，从 9 人到 8 人，每个存活的玩家都锁定了更高的奖金。因此，在 ICM 压力下，即使 ChipEV 为正的全压，也可能因为奖金结构而被弃掉。决赛桌时，除非你非常短筹（<5bb），否则应该比纯 ChipEV 建议的范围更紧。',
+            en: 'ICM (Independent Chip Model) converts chips into real prize equity. In tournament late stages, especially bubbles or final tables, chip value is non-linear — losing chips costs more than winning the same amount gains. From 9 players to 8, every survivor locks a higher prize. So under ICM pressure, even ChipEV-positive pushes may be folded due to payout structure. At final tables, unless very short (<5bb), play tighter than pure ChipEV suggests.'
+        }
+    },
+    {
+        question: { zh: '为什么短筹码时同花连牌比非同花大 Ace 更有价值？', en: 'Why are suited connectors more valuable than offsuit big Aces when short-stacked?' },
+        answer: { 
+            zh: '短筹码（<10bb）全压时，你的主要赢率来自：1）对手弃牌；2）翻后中强牌。同花连牌（如 T9s、87s）虽然翻前 equity 不如 AJo，但它们有更高的隐含赔率潜力——容易中顺子或同花，而且一旦击中，对手很难读出。相比之下，非同花大 Ace（如 AJo）在短筹码全压时，如果被跟注，往往只是 coin flip（抛硬币）对抗口袋对子。短筹码时，翻牌后操作空间有限，所以手牌的结构性和可玩性比单纯的翻前 equity 更重要。',
+            en: 'When short-stacked (<10bb), your main win sources are: 1) opponent folds; 2) hitting strong hands postflop. Suited connectors like T9s or 87s have lower preflop equity than AJo, but higher implied odds — they can make straights or flushes, and when they hit, opponents struggle to read. In contrast, offsuit big Aces like AJo are often just coin flips against pocket pairs when called. With limited postflop maneuverability, hand structure and playability matter more than raw preflop equity.'
+        }
+    },
+    {
+        question: { zh: '什么时候应该用 "ChipEV" 模式，什么时候应该考虑 ICM？', en: 'When should I use ChipEV mode vs considering ICM?' },
+        answer: { 
+            zh: 'ChipEV 模式适用于：1）锦标赛的早期阶段（离钱圈还很远）；2）SNG 的前几级；3）日常练习和理论分析。ICM 需要考虑的情况：1）接近钱圈（泡沫期）；2）决赛桌；3）你的筹码量处于"中等"（不是最短也不是最短）。简单规则：如果你不是最短筹，而且离钱圈很近（例如 15 人剩 12 人进钱），ICM 会让你的全压范围收紧 10-30%。如果只剩 10bb 以下，ICM 影响较小，因为不行动就会被盲注耗尽。',
+            en: 'ChipEV applies to: 1) early tournament stages (far from bubble); 2) early SNG levels; 3) practice and theory study. ICM matters when: 1) near the bubble; 2) at final table; 3) you have a medium stack (not shortest or chip leader). Simple rule: if not the shortest stack and near the bubble (e.g., 15 left, 12 cash), ICM tightens your push range by 10-30%. Under 10bb, ICM has less impact because inaction bleeds you out.'
+        }
+    },
+    {
+        question: { zh: '5bb 以下超短筹码时，有什么特殊策略？', en: 'What special strategies apply with under 5bb?' },
+        answer: { 
+            zh: '5bb 以下是" desperation mode"（绝望模式）：1）任何 A、任何对子、任何两张 10 以上的牌都可以全压；2）在 SB 位置，几乎任何两张牌都可以全压（因为只剩不到 1 轮盲注）；3）不要等待"好牌"，因为盲注会吃光你；4）优先找"有摊牌价值"的手牌，而不是听牌型。数学上，5bb 在 BTN 的理论全压范围超过 60% 的手牌。这时候"Fold equity"已经很低，主要依赖摊牌价值。',
+            en: 'Under 5bb is "desperation mode": 1) Any Ace, any pair, any two Broadway cards are pushable; 2) From SB, almost any two cards can push (less than 1 orbit of blinds left); 3) Don\'t wait for "premium" hands — blinds will eat you; 4) Prioritize hands with showdown value, not drawing hands. Mathematically, 5bb from BTN pushes over 60% of hands. Fold equity is minimal — rely on showdown value.'
+        }
+    },
+    {
+        question: { zh: '为什么 BB 位置的全压范围比 BTN 还宽？', en: 'Why is the BB push range even wider than BTN?' },
+        answer: { 
+            zh: 'BB 位置已经投入了一个大盲注（1bb），所以你只需要再投入 (stack - 1)bb 就能看翻牌。如果所有人都弃牌到 BB，你已经"免费"看了一次翻牌。但更重要的是，在短筹码场景中，BB 面对的是最后一个行动的机会。如果前面都弃牌，你只剩 SB 和一个可能跟注的 BB。而且 BB 已经投入了 1bb，pot odds 更好。所以 BB 的理论全压范围非常宽，有时超过 70% 的手牌。',
+            en: 'BB has already invested 1bb, so you only need to add (stack - 1)bb to see the flop. If everyone folds to BB, you get a "free" flop. More importantly, in short-stack scenarios, BB is the last to act. If everyone folded before, you only face SB and a potentially calling BB. And BB already has 1bb invested, giving better pot odds. So BB\'s theoretical push range is extremely wide, sometimes over 70% of hands.'
+        }
+    },
+    {
+        question: { zh: '全压时，"Fold Equity" 是什么？为什么重要？', en: 'What is Fold Equity and why does it matter when pushing?' },
+        answer: { 
+            zh: 'Fold Equity 指你下注/全压后，对手弃牌的概率。短筹码全压的期望值 = (对手弃牌率 × 赢得的底池死钱) + (对手跟注率 × 被跟注时的 equity × 赢得的筹码) - (对手跟注率 × 被跟注时的败率 × 输掉的筹码)。即使你的手牌被跟注时只有 40% 胜率，如果对手有 50% 概率弃牌，Fold Equity 足以让全压成为正 EV。位置越靠前（UTG/MP），Fold Equity 越低，因为后面玩家越多；位置越后（BTN/SB），Fold Equity 越高。',
+            en: 'Fold Equity is the probability opponents fold to your bet/push. Short-stack push EV = (fold% × dead money) + (call% × equity × win) - (call% × (1-equity) × lose). Even if your hand only has 40% equity when called, if opponents fold 50% of the time, fold equity alone makes the push +EV. Earlier positions (UTG/MP) have lower fold equity due to more players behind; later positions (BTN/SB) have higher fold equity.'
+        }
+    },
+    {
+        question: { zh: '对手数量对全压范围有什么影响？', en: 'How does the number of opponents affect my push range?' },
+        answer: { 
+            zh: '对手越多，你的全压范围应该越紧。原因：1）被跟注的概率增加——每个对手都有独立概率用范围内的牌跟注；2）多人底池时，你的 equity 被稀释（即使你是 60% 的 equity，两个对手各自也有 20-30% 的 equity，你实际只有约 45% 的胜率）。1 个对手时，你可以用标准范围全压；2 个对手时，范围收紧约 20%；3 个及以上时，只全压 Premium 手牌（AA-QQ、AKs）。',
+            en: 'More opponents means a tighter push range. Reasons: 1) Higher chance of being called — each opponent has independent probability of calling with their range; 2) In multiway pots, your equity is diluted (even with 60% equity vs one, two opponents each with 20-30% means you actually only win ~45%). With 1 opponent, use standard range; with 2, tighten ~20%; with 3+, only push premium hands (AA-QQ, AKs).' 
+        }
+    },
+    {
+        question: { zh: '如何在实战中快速判断是否应该全压？', en: 'How do I quickly decide whether to push in real games?' },
+        answer: { 
+            zh: '三步快速判断法：1）看筹码深度——<10bb 考虑全压，<5bb 几乎任何可玩手牌都全压；2）看位置——BTN > CO > MP > UTG，位置越后范围越宽；3）看手牌——在 APP 中输入手牌和筹码，2 秒内得到建议。记住：线上锦标赛节奏很快，不要过度思考。如果你的手牌在推荐范围内，而且筹码<15bb，直接全压。犹豫只会让你错过时机。',
+            en: 'Three-step quick check: 1) Stack depth — consider pushing under 10bb, almost any playable hand under 5bb; 2) Position — BTN > CO > MP > UTG, wider from later positions; 3) Hand — enter your hand and stack in the app, get advice in 2 seconds. Remember: online tournaments are fast-paced, don\'t overthink. If your hand is in the recommended range and stack is under 15bb, just push. Hesitation makes you miss opportunities.'
+        }
+    }
+];
+
+// 策略 FAQ 获取函数
+function getStrategyFAQ(lang) {
+    return STRATEGY_FAQ.map(item => ({
+        question: item.question[lang] || item.question.zh,
+        answer: item.answer[lang] || item.answer.zh
+    }));
+}
+
+// 每日一题生成器
+function generateDailyChallenge() {
+    const positions = ['UTG', 'MP', 'CO', 'BTN', 'SB'];
+    const depths = [1, 2, 3, 5, 7, 10, 12, 15, 20];
+    const oppCounts = [1, 2];
+    
+    const position = positions[Math.floor(Math.random() * positions.length)];
+    const stackDepth = depths[Math.floor(Math.random() * depths.length)];
+    const oppCount = oppCounts[Math.floor(Math.random() * oppCounts.length)];
+    
+    // 随机选择手牌
+    const ranks = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
+    const r1 = ranks[Math.floor(Math.random() * ranks.length)];
+    const r2 = ranks[Math.floor(Math.random() * ranks.length)];
+    const isSuited = Math.random() > 0.5;
+    let handKey;
+    if (r1 === r2) handKey = r1 + r2;
+    else if (ranks.indexOf(r1) < ranks.indexOf(r2)) handKey = r1 + r2 + (isSuited ? 's' : 'o');
+    else handKey = r2 + r1 + (isSuited ? 's' : 'o');
+    
+    const recommendation = getShortStackRecommendation(position, stackDepth, handKey);
+    const isPush = recommendation === 'P';
+    
+    return {
+        position,
+        stackDepth,
+        handKey,
+        opponentCount: oppCount,
+        opponentRange: 'standard',
+        correctAnswer: isPush ? 'push' : 'fold',
+        explanation: isPush 
+            ? `在 ${position} 位置，${stackDepth}bb 筹码深度下，${handKey} 处于推荐全压范围内。对抗 ${oppCount} 个标准范围对手，此手牌有 sufficient fold equity 和摊牌价值。`
+            : `在 ${position} 位置，${stackDepth}bb 筹码深度下，${handKey} 不在推荐全压范围内。对抗 ${oppCount} 个标准范围对手，此手牌的 equity 不足，且 fold equity 无法弥补。建议弃牌等待更好的机会。`,
+        explanationEn: isPush
+            ? `From ${position} with ${stackDepth}bb, ${handKey} is in the recommended push range. Against ${oppCount} standard-range opponents, this hand has sufficient fold equity and showdown value.`
+            : `From ${position} with ${stackDepth}bb, ${handKey} is outside the recommended push range. Against ${oppCount} standard-range opponents, this hand lacks sufficient equity and fold equity cannot compensate. Fold and wait for a better spot.`
+    };
+}
+
+// ============ UI 兼容函数 ============
+
+/**
+ * 获取全压/弃牌建议（兼容 index.html 和 daily-challenge.js）
+ * @param {string} position - 位置
+ * @param {number} stackDepth - 筹码深度
+ * @param {string} handKey - 手牌键如 'AKs'
+ * @returns {Object} { isInRange, rangeSet }
+ */
+function getPushFoldAdvice(position, stackDepth, handKey) {
+    const recommendation = getShortStackRecommendation(position, stackDepth, handKey);
+    const rangeHands = getShortStackRangeHands(position, stackDepth);
+    return {
+        isInRange: recommendation === 'P',
+        rangeSet: new Set(rangeHands)
+    };
+}
+
+/**
+ * 获取全压/弃牌矩阵（兼容 index.html）
+ * @param {string} position - 位置
+ * @param {number} stackDepth - 筹码深度
+ * @returns {Array} 13x13 矩阵，每个单元格 { hand, action, bg, color }
+ */
+function getPushFoldMatrix(position, stackDepth) {
+    const rangeHands = getShortStackRangeHands(position, stackDepth);
+    const rangeSet = new Set(rangeHands);
+    const matrix = [];
+    
+    for (let i = 0; i < 13; i++) {
+        const row = [];
+        for (let j = 0; j < 13; j++) {
+            let handKey;
+            if (i === j) {
+                handKey = RANKS_MATRIX[i] + RANKS_MATRIX[j];
+            } else if (i < j) {
+                handKey = RANKS_MATRIX[i] + RANKS_MATRIX[j] + 's';
+            } else {
+                handKey = RANKS_MATRIX[j] + RANKS_MATRIX[i] + 'o';
+            }
+            
+            const isInRange = rangeSet.has(handKey);
+            const action = isInRange ? 'P' : 'F';
+            const bg = isInRange ? '#22c55e' : '#ef4444';
+            
+            row.push({
+                hand: handKey,
+                action: action,
+                bg: bg,
+                color: '#fff'
+            });
+        }
+        matrix.push(row);
+    }
+    
+    return matrix;
+}
+
+/**
+ * 获取手牌显示名称（兼容 index.html）
+ * @param {string} handKey - 如 'AKs'
+ * @returns {string} 中文显示名
+ */
+function getHandDisplayName(handKey) {
+    const rankNames = { 'A': 'A', 'K': 'K', 'Q': 'Q', 'J': 'J', 'T': 'T', '9': '9', '8': '8', '7': '7', '6': '6', '5': '5', '4': '4', '3': '3', '2': '2' };
+    if (handKey.length === 2) {
+        return '口袋' + rankNames[handKey[0]] + rankNames[handKey[1]];
+    }
+    const type = handKey[2] === 's' ? '同花' : '非同花';
+    return rankNames[handKey[0]] + rankNames[handKey[1]] + ' ' + type;
+}
+
+// 导出/兼容模块（如果支持 module.exports）
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        Card, Range, SUITS, RANKS,
+        evaluate5Cards, evaluate7Cards, compareHands,
+        calculateEquity, calculateEquityVsRange, calculateEquityVsMultipleRanges,
+        calculateExpectedValue, calculateChipEV,
+        calculateRiskOfRuin, evaluateBankrollManagement, getBankrollActionAdvice,
+        getPreflopMatrix, getHandAdviceAllPositions,
+        getShortStackRecommendation, getShortStackRangeHands,
+        getHandKey, getHandDescription, normalizeHandKey,
+        getPushFoldAdvice, getPushFoldMatrix, getHandDisplayName,
+        getStrategyFAQ, generateDailyChallenge,
+        OPPONENT_RANGE_PRESETS, SHORT_STACK_RANGES, HAND_COMBINATIONS
+    };
+}
+
+
